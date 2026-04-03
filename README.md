@@ -3,4 +3,3 @@
   - Fletcher Green
   - Nick Ramoso
   - Ryan Dinham
-  - Adam Loepker

@@ -1,0 +1,65 @@
+---
+title: "District Comparison"
+author: "Fletcher Green"
+date: "2026-04-01"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggredist)
+library(sf)
+```
+
+# District Comparison
+
+- **Overview:** Both New York and Missouri have redistricted twice since the 2020 census. New York is undergoing litigation and may redistrict a third time. This document compares the first two redistrictings in each state.
+
+## Missouri
+
+- **Version:** This is the first map enacted by Missouri following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2022-missouri-congressional-districts-approved-plan/>
+
+```{r warning=F, message=F, echo=F}
+mapMoOld <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+mapMoOld |> 
+  ggplot() +
+  geom_sf() +
+  theme_map()
+```
+
+- **Version:** This is the second map enacted by Missouri following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2025-missouri-congressional-districts-plan/>
+
+```{r warning=F, echo=F}
+mapMoNew <- st_read("shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
+mapMoNew |> 
+  ggplot() +
+  geom_sf() +
+  theme_map()
+```
+
+## New York
+
+- **Version:** This is the first map enacted by New York following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2022-new-york-congressional-districts-plan/>
+
+```{r warning=F, message=F, echo=F}
+mapNyOld <- st_read("shape-files/ny-init-shape/CON22_June_03_2022.shp")
+mapMoOld |> 
+  ggplot() +
+  geom_sf() +
+  theme_map()
+```
+
+- **Version:** This is the second map enacted by New York following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
+
+```{r warning=F, echo=F}
+mapNyNew <- st_read("shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
+mapNyNew |> 
+  ggplot() +
+  geom_sf() +
+  theme_map()
+```
