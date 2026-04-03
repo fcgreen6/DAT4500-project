@@ -19,6 +19,10 @@ library(ggredist)
 #  theme_map()
   
 
+
+# source of code:
+# https://alarm-redist.org/redist/
+
 map_NY2 = redist_map(map_NY, existing_plan=cd_2020, pop_tol=0.005,
 total_pop = pop, adj = map_NY$adj)
 
