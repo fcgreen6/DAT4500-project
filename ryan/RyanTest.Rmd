@@ -3,7 +3,30 @@ title: "RyanTest"
 output: html_document
 ---
 
-test1
+library(alarmdata)
+library(redist)
+library(dplyr)
+map_NY <- alarm_50state_map('NY')
 
 
-test2 new commit
+library(ggplot2)
+library(ggredist)
+
+# map_NY |> 
+#  ggplot() +
+#  geom_district(aes(group = cd_2020, fill = ndv, denom = nrv + ndv)) +
+#  scale_fill_party_c() +
+#  theme_map()
+  
+
+map_NY2 = redist_map(map_NY, existing_plan=cd_2020, pop_tol=0.005,
+total_pop = pop, adj = map_NY$adj)
+
+NY_plans = redist_smc(map_NY2, nsims=10)
+
+
+library(ggplot2)
+library(patchwork) # for plotting
+
+redist.plot.plans(NY_plans, draws=c("cd_2020", "1", "2", "3", "4", "5"), shp=map_NY2)
+
