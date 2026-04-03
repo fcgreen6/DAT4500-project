@@ -47,7 +47,7 @@ mapMoNew |>
 
 ```{r warning=F, message=F, echo=F}
 mapNyOld <- st_read("shape-files/ny-init-shape/CON22_June_03_2022.shp")
-mapMoOld |> 
+mapNyOld |> 
   ggplot() +
   geom_sf() +
   theme_map()
