@@ -1,0 +1,41 @@
+---
+title: "MO sample redist code"
+output: html_document
+---
+
+
+```{r}
+#packages and files
+library(alarmdata)
+library(redist)
+library(dplyr)
+library(ggplot2)
+library(ggredist)
+map_MO <- alarm_50state_map('MO')
+```
+
+
+
+
+
+
+
+  
+
+
+# source of code:
+# https://alarm-redist.org/redist/
+
+
+```{r}
+map_MO2 = redist_map(map_MO, existing_plan=cd_2020, pop_tol=0.005,
+total_pop = pop, adj = map_MO$adj)
+
+MO_plans = redist_smc(map_MO2, nsims=5)
+
+library(ggplot2)
+library(patchwork) # for plotting
+
+redist.plot.plans(MO_plans, draws=c("cd_2020", "1", "2", "3", "4", "5"), shp=map_MO2)
+```
+
