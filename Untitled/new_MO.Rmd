@@ -71,7 +71,7 @@ plot(map_MO, fill = pop / areas) +
     breaks = c(0, 200, 1200, 3000, 5000),
     limits = c(0, 5000)          
 )
-
+.
 max(map_MO$pop / areas)
 ```
 
