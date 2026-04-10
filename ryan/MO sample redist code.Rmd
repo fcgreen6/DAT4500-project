@@ -11,7 +11,11 @@ library(redist)
 library(dplyr)
 library(ggplot2)
 library(ggredist)
+library(ggplot2)
+library(patchwork) # for plotting
 map_MO <- alarm_50state_map('MO')
+map_MO <- map_MO |>
+    mutate(vote_tot = nrv + ndv)
 ```
 
 
@@ -23,19 +27,46 @@ map_MO <- alarm_50state_map('MO')
   
 
 
-# source of code:
+# source of code:.
 # https://alarm-redist.org/redist/
 
 
 ```{r}
-map_MO2 = redist_map(map_MO, existing_plan=cd_2020, pop_tol=0.005,
+map_MO2 = redist_map(map_MO, existing_plan=cd_2020, pop_tol=0.01,
 total_pop = pop, adj = map_MO$adj)
 
-MO_plans = redist_smc(map_MO2, nsims=5)
+MO_plans = redist_smc(map_MO2, nsims=500)
 
-library(ggplot2)
-library(patchwork) # for plotting
+
 
 redist.plot.plans(MO_plans, draws=c("cd_2020", "1", "2", "3", "4", "5"), shp=map_MO2)
+```
+
+
+
+
+
+```{r}
+MO_plans = MO_plans |>
+    mutate(Compactness = comp_polsby(pl(), map_MO2),
+           `Population deviation` = plan_parity(map_MO2),
+           `Democratic vote` = group_frac(map_MO2, ndv, vote_tot))
+#> Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+
+hist(MO_plans, `Population deviation`) + hist(MO_plans, Compactness) +
+    plot_layout(guides="collect") +
+    plot_annotation(title="Simulated plan characteristics")
+```
+
+```{r}
+redist.plot.scatter(MO_plans, `Population deviation`, Compactness) +
+    labs(title="Population deviation and compactness by plan")
+```
+
+```{r}
+
+plot(MO_plans, `Democratic vote`, size=0.5, color_thresh=0.5) +
+    scale_color_manual(values=c("black", "tomato2", "dodgerblue")) +
+    labs(title="Democratic vote share by district")
 ```
 

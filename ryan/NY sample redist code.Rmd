@@ -1,36 +1,72 @@
 ---
-title: "RyanTest"
+title: "MO sample redist code"
 output: html_document
 ---
 
+
+```{r}
+#packages and files
 library(alarmdata)
 library(redist)
 library(dplyr)
-map_NY <- alarm_50state_map('NY')
-
-
 library(ggplot2)
 library(ggredist)
+library(ggplot2)
+library(patchwork) # for plotting
+map_NY <- alarm_50state_map('NY')
+map_NY <- map_NY |>
+    mutate(vote_tot = nrv + ndv)
+```
 
-# map_NY |> 
-#  ggplot() +
-#  geom_district(aes(group = cd_2020, fill = ndv, denom = nrv + ndv)) +
-#  scale_fill_party_c() +
-#  theme_map()
+
+
+
+
+
+
   
 
 
-# source of code:
+# source of code:.
 # https://alarm-redist.org/redist/
 
-map_NY2 = redist_map(map_NY, existing_plan=cd_2020, pop_tol=0.005,
+
+```{r}
+map_NY2 = redist_map(map_NY, existing_plan=cd_2020, pop_tol=0.003,
 total_pop = pop, adj = map_NY$adj)
 
-NY_plans = redist_smc(map_NY2, nsims=10)
+NY_plans = redist_smc(map_NY2, nsims=100)
 
 
-library(ggplot2)
-library(patchwork) # for plotting
 
 redist.plot.plans(NY_plans, draws=c("cd_2020", "1", "2", "3", "4", "5"), shp=map_NY2)
+```
+
+
+
+
+
+```{r}
+NY_plans = NY_plans |>
+    mutate(Compactness = comp_polsby(pl(), map_NY2),
+           `Population deviation` = plan_parity(map_NY2),
+           `Democratic vote` = group_frac(map_NY2, ndv, vote_tot))
+#> Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+
+hist(NY_plans, `Population deviation`) + hist(NY_plans, Compactness) +
+    plot_layout(guides="collect") +
+    plot_annotation(title="Simulated plan characteristics")
+```
+
+```{r}
+redist.plot.scatter(NY_plans, `Population deviation`, Compactness) +
+    labs(title="Population deviation and compactness by plan")
+```
+
+```{r}
+
+plot(MO_plans, `Democratic vote`, size=0.5, color_thresh=0.5) +
+    scale_color_manual(values=c("black", "tomato2", "dodgerblue")) +
+    labs(title="Democratic vote share by district")
+```
 
