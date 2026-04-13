@@ -1,0 +1,116 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(alarmdata)
+library(redist)
+library(dplyr)
+library(ggplot2)
+library(ggredist)
+library(ggplot2)
+library(sf)
+library(patchwork) # for plotting.
+map_MO <- alarm_50state_map('MO')
+map_MO <- map_MO |>
+    mutate(vote_tot = nrv + ndv) |>
+    mutate(dem_perc = ndv / vote_tot)
+```
+
+### Exercise 1
+learn the laws for redistricting.
+http://127.0.0.1:16989/library/redist/doc/redist.html  n         
+
+```{r code-chunk-label}
+
+
+
+plot(map_MO, adj = TRUE) + plot(map_MO)
+```
+
+### Exercise 2
+```{r}
+areas = as.numeric(units::set_units(sf::st_area(map_MO$geometry), mi^2))
+plot(map_MO, fill = pop / areas) + 
+    scale_fill_viridis_c(
+    name   = "Population density (people / sq. mi)",
+    trans  = "sqrt",
+    labels = scales::comma,
+    breaks = c(0, 200, 1200, 3000, 5000),
+    limits = c(0, 5000)          
+)
+
+```
+
+...
+```{r}
+my_cutpoints <- c(0,.35,.45,.49999,.5,.50001,.55,.65,1.00)
+my_labels <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1", 
+               "D+0 to D+1", "D+1 to D+5", "D+5 to D+15", "D+15 or more")
+my_colors <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
+               "#d1e5f0","#92c5de","#4393c3","#2166ac")
+map_MO <- map_MO |>
+  mutate(margin = cut(dem_perc, breaks = my_cutpoints, labels = my_labels))
+
+ggplot(map_MO) +
+  geom_sf(aes(fill = margin), color = alpha("black", 0.15), linewidth = 0.05) +
+  scale_fill_manual("", values = my_colors)
+
+#plot(map_MO, fill = margin) +
+    #scale_fill_gradient2(name="Pct. Democratic '2020",  midpoint=0.5)
+
+```
+
+```{r}
+plot(map_MO, fill = vap_white / vap, by_distr = TRUE)
+```
+
+
+```{r}
+MO_plans = redist_smc(map_MO, 100, compactness=1, runs=2)
+redist.plot.plans(MO_plans, draws=1:6, shp=map_MO)
+```
+
+```{r}
+MO_plans = match_numbers(MO_plans, map_MO$cd_2020)
+print(MO_plans)
+
+county_perims = prep_perims(map_MO, map_MO$adj)
+
+MO_plans = MO_plans |>
+    mutate(pop_dev = abs(total_pop / get_target(map_MO) - 1),
+           comp = comp_polsby(pl(), map_MO, perim_df=county_perims),
+           pct_min = group_frac(map_MO, vap - vap_white, vap),
+           pct_dem = group_frac(map_MO, ndv, ndv + nrv))
+print(MO_plans)
+
+
+plan_sum = group_by(MO_plans, draw) |>
+    summarize(max_dev = max(pop_dev),
+              avg_comp = mean(comp),
+              max_pct_min = max(pct_min),
+              dem_distr = sum(pct_dem > 0.5))
+print(plan_sum)
+```
+
+```{r}
+hist(plan_sum, max_dev) + hist(MO_plans, comp) +
+    plot_layout(guides="collect")
+```
+
+```{r}
+plot(MO_plans, pct_dem, sort=FALSE, size=0.5)
+
+```
+
+
+```{r}
+pal = scales::viridis_pal()(8)
+redist.plot.scatter(MO_plans, pct_min, pct_dem, 
+                    color=pal[subset_sampled(MO_plans)$district]) +
+    scale_color_manual(values="black")
+```
+
