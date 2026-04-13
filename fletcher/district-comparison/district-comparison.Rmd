@@ -7,10 +7,10 @@ output: md_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+source("BlockManager/Blockmanager.R")
 library(alarmdata)
 library(redist)
 library(ggredist)
-source("BlockManager/Blockmanager.R")
 library(tidyverse)
 library(ggredist)
 library(sf)
@@ -70,25 +70,41 @@ mapNyNew |>
 
 # Improved Plots
 
+- **Overview:** Similar to the plots above, except data has been joined to color the maps based on republican and democrat voters.
+
+## Missouri
+
+- **Version:** This is the second map enacted by Missouri following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2025-missouri-congressional-districts-plan/>
+
 ```{r warning=F, echo=F}
+# Read geometry of districts.
 moNewDistricts <- st_read(
   "shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp"
 )
+
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
 moNewDistricts <- moNewDistricts |>
   select(OBJECTID, District, geometry) |>
   rename(DISTRICT = District)
 
+# Read block level data. Change col names so that they match what is
+# expected by BlockManager.
 moData2020 <- read.csv("mo_2020_vtd.csv")
 moData2020 <- moData2020 |>
   rename(GEOID = GEOID20) |>
   select(nrv, ndv, GEOID) |>
   mutate(GEOID = as.character(GEOID))
 
+# Get blocks and join block level data to it.
 moBlocks2020 <- BlockManager$GetBlocks("MO")
 moBlocks2020 <- BlockManager$JoinByGeoid(moBlocks2020, moData2020)
 
+# Consolidate blocks and their data into districts.
 moNewDistricts <- BlockManager$ConsolodateDistricts(moNewDistricts, moBlocks2020)
 
+# Plot districts.
 ggplot() +
   geom_sf(data = moNewDistricts, aes(fill = ndv / (ndv + nrv)), linewidth = 0.7) +
   scale_fill_party_c() +
@@ -96,15 +112,24 @@ ggplot() +
   geom_district(data = moNewDistricts, fill = NA, aes(group = TRUE), linewidth = 1.0)
 ```
 
+- **Version:** This is the first map enacted by Missouri following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2022-missouri-congressional-districts-approved-plan/>
+
 ```{r warning=F, echo=F}
+# Read geometry of districts.
 moOldDistricts <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
 moOldDistricts <- moOldDistricts |>
   select(ID, DISTRICT, geometry) |>
   rename(OBJECTID = ID) |>
   mutate(DISTRICT = as.numeric(DISTRICT))
 
+# Consolodate blocks and their data into districts.
 moOldDistricts <- BlockManager$ConsolodateDistricts(moOldDistricts, moBlocks2020)
 
+# Plot districts.
 ggplot() +
   geom_sf(data = moOldDistricts, aes(fill = ndv / (ndv + nrv)), linewidth = 0.7) +
   scale_fill_party_c() +
@@ -112,23 +137,34 @@ ggplot() +
   geom_district(data = moNewDistricts, fill = NA, aes(group = TRUE), linewidth = 1.0)
 ```
 
+- **Version:** This is the second map enacted by New York following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
+
 ```{r warning=F, echo=F}
+# Read geometry of districts.
 nyNewDistricts <- st_read("shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
 
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
 nyNewDistricts <- nyNewDistricts |>
   select(OBJECTID, DISTRICT, geometry)
 
+# Read block level data. Change col names so that they match what is
+# expected by BlockManager.
 nyData2020 <- read.csv("ny_2020_vtd.csv")
 nyData2020 <- nyData2020 |>
   rename(GEOID = GEOID20) |>
   select(nrv, ndv, GEOID) |>
   mutate(GEOID = as.character(GEOID))
 
+# Get blocks and join block level data to it.
 nyBlocks2020 <- BlockManager$GetBlocks("NY")
 nyBlocks2020 <- BlockManager$JoinByGeoid(nyBlocks2020, nyData2020)
 
+# Consolidate blocks and their data into districts.
 nyNewDistricts <- BlockManager$ConsolodateDistricts(nyNewDistricts, nyBlocks2020)
 
+# Plot districts.
 ggplot() +
   geom_sf(data = nyNewDistricts, aes(fill = ndv / (ndv + nrv)), linewidth = 0.7) +
   scale_fill_party_c() +
@@ -136,14 +172,22 @@ ggplot() +
   geom_district(data = nyNewDistricts, fill = NA, aes(group = TRUE), linewidth = 1.0)
 ```
 
+- **Version:** This is the first map enacted by New York following the 2020 census.
+- **Link to data:** <https://redistrictingdatahub.org/dataset/2022-new-york-congressional-districts-plan/>
+
 ```{r warning=F, echo=F}
+# Read geometry of districts.
 nyOldDistricts <- st_read("shape-files/ny-init-shape/CON22_June_03_2022.shp")
 
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
 nyOldDistricts <- mapNyOld |>
   select(OBJECTID, DISTRICT, geometry)
 
+# Consolidate blocks and their data into districts.
 nyOldDistricts <- BlockManager$ConsolodateDistricts(nyOldDistricts, nyBlocks2020)
 
+# Plot districts.
 ggplot() +
   geom_sf(data = nyOldDistricts, aes(fill = ndv / (ndv + nrv)), linewidth = 0.7) +
   scale_fill_party_c() +
@@ -151,36 +195,62 @@ ggplot() +
   geom_district(data = nyNewDistricts, fill = NA, aes(group = TRUE), linewidth = 1.0)
 ```
 
+# Missouri Overlayed Map
+
+- **Overview:** A map of Missouri generated to show the cracking of the Kansas City district. Orange is area retained between redistrictings. White is area acquired between redistrictings. Blue is the boundary of the former Kansas City district.
+
 ```{r warning=F, echo=F}
+# Load new Missouri districts.
 mapMoNew <- st_read("shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
+
+# Load old Missouri districts.
 mapMoOld <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+
+# Filter out extra variables.
 mapMoNew <- mapMoNew |>
   select(OBJECTID, District, geometry) |>
-  rename(DISTRICT = District)
+  rename(DISTRICT = District) |>
+  st_transform(st_crs(mapMoOld))
 
+# Filter out extra variables.
 mapMoOld <- mapMoOld |>
   select(ID, DISTRICT, geometry) |>
   rename(OBJECTID = ID)
 
-mapMoSame1 <- NULL
-mapMoSame2 <- NULL
+# Get the overlap polygons for each district and save them to a vector.
 mapMoOverlap <- NULL
-mapMoNew$diff <- 0
-mapMoNew <- st_transform(mapMoNew, st_crs(mapMoOld))
 for (i in seq_len(nrow(mapMoNew))) {
-  if (abs(as.numeric(st_area(mapMoNew[i,])) - as.numeric(st_area(mapMoOld[i,]))) < 10000000000) {
-    mapMoSame1 <- rbind(mapMoSame1, mapMoNew[i,])
-    mapMoSame2 <- rbind(mapMoSame2, mapMoOld[i,])
-  }
-  mapMoNew[i,]$diff <- abs(as.numeric(st_area(mapMoNew[i,])) - as.numeric(st_area(mapMoOld[i,])))
   mapMoOverlap <- rbind(mapMoOverlap, st_intersection(mapMoNew[i,], mapMoOld[i,]))
 }
 
 ggplot() +
-  geom_district(data = mapMoNew, color = NA, fill = "white", aes(group = TRUE), linewidth = 1.5) +
+  
+  # White background of the entire state.
+  geom_district(
+    data = mapMoNew, 
+    color = NA, 
+    fill = "white", 
+    aes(group = TRUE), 
+    linewidth = 1.5
+  ) +
+  
+  # Paint overlapped areas in orange.
   geom_sf(data = mapMoOverlap, fill = "orange", color = NA, linewidth = 0.7) +
+  
+  # Paint new district boundaries.
   geom_sf(data = mapMoNew, fill = NA, linewidth = 0.7) +
+  
+  # Paint border around state.
   geom_district(data = mapMoNew, fill = NA, aes(group = TRUE), linewidth = 1.0) +
-  geom_sf(data = mapMoOld[5,], color = "blue", fill = adjustcolor("#1F77B4", alpha.f = 0.3), linewidth = 1.2) +
+  
+  # Highlight district five from the old Missouri plans.
+  geom_sf(
+    data = mapMoOld[5,],
+    color = "blue",
+    fill = adjustcolor("#1F77B4", alpha.f = 0.3),
+    linewidth = 1.2
+  ) +
+  
+  # Blank theme.
   theme_map()
 ```
