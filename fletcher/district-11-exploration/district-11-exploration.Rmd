@@ -1,0 +1,64 @@
+---
+title: "District 11 Exploration"
+author: "Fletcher Green"
+date: "2026-04-14"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("vistime")
+```
+
+# New York Redistricting Timeline
+
+```{r warning=F, message=F, echo=F}
+districtData <- data.frame(
+  group = c(
+    rep(c("Approved\nPlan\nDurations"), each = 4),
+    rep(c("Group\nin\nControl"), each = 6)
+  ),
+  names = c(
+    "", "L", "C", "L",
+    "R", "L", "C", "R", "L", "R"
+  ),
+  start = c(
+    "2020-01-01", "2022-02-03", "2022-06-02", "2024-02-28",
+    "2020-01-01", "2022-01-03", "2022-04-27", "2022-06-02", "2024-02-15", "2024-02-28"
+  ),
+  end = c(
+    "2022-02-03", "2022-06-02", "2024-02-28", "2026-04-14",
+    "2022-01-03", "2022-04-27", "2022-06-02", "2024-02-15", "2024-02-28", "2026-04-14"
+  ),
+  color = c(
+    "gray", "orange", "red", "orange", 
+    "blue", "orange", "red", "blue", "orange", "blue"
+  )
+)
+
+gg_vistime(districtData, col.event = "names", title = "New York Redistricting Timeline")
+```
+
+```{r warning=F, message=F, echo=F}
+## Line legend.
+#plot.new()  # creates an empty plotting area
+#legend(
+#  "center",
+#  legend = c("Group A", "Group B", "Group C"),
+#  col = c("red", "blue", "green"),
+#  lty = 1,
+#  lwd = 1
+#)
+
+# Point legend.
+plot.new()  # creates an empty plotting area
+legend(
+  "center",
+  legend = c("Legislature", "Court", "Redistricting Commision"),
+  col = c("orange", "red", "blue"),
+  pch = c(16, 16, 16),
+  pt.cex = 3,
+  y.intersp = 1.5
+)
+```
