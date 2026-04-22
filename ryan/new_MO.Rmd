@@ -18,6 +18,13 @@ map_MO <- alarm_50state_map('MO')
 map_MO <- map_MO |>
     mutate(vote_tot = nrv + ndv) |>
     mutate(dem_perc = ndv / vote_tot)
+district5_mo <- c(
+  "Clay County",
+  "Jackson County",
+  "Lafayette County",
+  "Ray County",
+  "Saline County"
+)
 ```
 
 ### Exercise 1
@@ -25,7 +32,6 @@ learn the laws for redistricting.
 http://127.0.0.1:16989/library/redist/doc/redist.html  n         
 
 ```{r code-chunk-label}
-
 
 
 plot(map_MO, adj = TRUE) + plot(map_MO)
@@ -53,7 +59,8 @@ my_labels <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
 my_colors <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
                "#d1e5f0","#92c5de","#4393c3","#2166ac")
 map_MO <- map_MO |>
-  mutate(margin = cut(dem_perc, breaks = my_cutpoints, labels = my_labels))
+  mutate(margin = cut(dem_perc, breaks = my_cutpoints, labels = my_labels)) |>
+  filter(county %in% district5_mo)
 
 ggplot(map_MO) +
   geom_sf(aes(fill = margin), color = alpha("black", 0.15), linewidth = 0.05) +
@@ -112,5 +119,22 @@ pal = scales::viridis_pal()(8)
 redist.plot.scatter(MO_plans, pct_min, pct_dem, 
                     color=pal[subset_sampled(MO_plans)$district]) +
     scale_color_manual(values="black")
+```
+
+
+
+```{r}
+map_MO <- map_MO |>
+  mutate(margin = cut(dem_perc, breaks = my_cutpoints, labels = my_labels)) |>
+  filter(cd_2020 == 5)
+
+dist5_boundary <- map_MO |> st_union()
+
+ggplot() +
+  geom_sf(data = map_MO, aes(fill = margin), color = alpha("black", 0.15), linewidth = 0.05) +
+  geom_sf(data = dist5_boundary, fill = NA, color = "black", linewidth = 1) +
+  scale_fill_manual("", values = my_colors) +
+  theme_void()
+
 ```
 
