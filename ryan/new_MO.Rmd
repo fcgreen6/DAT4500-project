@@ -13,7 +13,7 @@ library(ggplot2)
 library(ggredist)
 library(ggplot2)
 library(sf)
-library(patchwork) # for plotting.
+library(patchwork) # for plotting..
 map_MO <- alarm_50state_map('MO')
 map_MO <- map_MO |>
     mutate(vote_tot = nrv + ndv) |>
