@@ -15,7 +15,7 @@
 <!-- -->
 
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON
@@ -33,7 +33,7 @@
 <!-- -->
 
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -53,7 +53,7 @@
 <!-- -->
 
     ## Reading layer `CON22_June_03_2022' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 28 features and 4 fields
     ## Geometry type: POLYGON
@@ -71,7 +71,7 @@
 <!-- -->
 
     ## Reading layer `con24' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 26 features and 2 fields
     ## Geometry type: MULTIPOLYGON
@@ -96,7 +96,7 @@
 <!-- -->
 
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -114,7 +114,7 @@
 <!-- -->
 
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON
@@ -140,7 +140,7 @@
 <!-- -->
 
     ## Reading layer `con24' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 26 features and 2 fields
     ## Geometry type: MULTIPOLYGON
@@ -158,7 +158,7 @@
 <!-- -->
 
     ## Reading layer `CON22_June_03_2022' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 28 features and 4 fields
     ## Geometry type: POLYGON
@@ -178,7 +178,7 @@
 <!-- -->
 
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -187,7 +187,7 @@
     ## Projected CRS: WGS 84 / Pseudo-Mercator
 
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON

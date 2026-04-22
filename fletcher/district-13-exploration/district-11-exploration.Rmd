@@ -1,0 +1,241 @@
+---
+title: "District 11 Exploration"
+author: "Fletcher Green"
+date: "2026-04-14"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(vistime)
+library(redist)
+library(ggredist)
+source("../BlockManager/Blockmanager.R")
+```
+
+# New York Redistricting Timeline
+
+- **Description:**
+  - A timeline of redistricting events in New York following the 2020 census. Data manually collected from: <https://redistricting.lls.edu/state/new-york/?cycle=2020&level=Congress&startdate=2022-02-03>.
+
+```{r warning=F, message=F, echo=F}
+districtData <- data.frame(
+  group = c(
+    rep(c("Approved\nPlan\nDurations"), each = 4),
+    rep(c("Group\nin\nControl"), each = 6)
+  ),
+  names = c(
+    "", "L", "C", "L",
+    "R", "L", "C", "R", "L", "R"
+  ),
+  start = c(
+    "2020-01-01", "2022-02-03", "2022-06-02", "2024-02-28",
+    "2020-01-01", "2022-01-03", "2022-04-27", "2022-06-02", "2024-02-15", "2024-02-28"
+  ),
+  end = c(
+    "2022-02-03", "2022-06-02", "2024-02-28", "2026-04-14",
+    "2022-01-03", "2022-04-27", "2022-06-02", "2024-02-15", "2024-02-28", "2026-04-14"
+  ),
+  color = c(
+    "gray", "orange", "red", "orange", 
+    "blue", "orange", "red", "blue", "orange", "blue"
+  )
+)
+
+gg_vistime(districtData, col.event = "names", title = "New York Redistricting Timeline")
+```
+
+# New York Extended Minority Map
+
+- **Description:**
+  - An extended version of Nick's minority map which attempts to better capture what is happening in district 11.
+
+```{r warning=F, message=F, echo=F}
+# Read geometry of districts.
+nyNewDistricts <- st_read("../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
+
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
+nyNewDistrictBlocks <- nyNewDistricts |>
+  select(OBJECTID, DISTRICT, geometry)
+
+dist11Adj <- st_touches(nyNewDistrictBlocks)[11]
+
+nyNewDistrictBoundaries <- nyNewDistrictBlocks[c(11, dist11Adj[[1]]),]
+nyNewDistrictBlocks <- nyNewDistrictBlocks[c(11, dist11Adj[[1]]),]
+
+# Read block level data. Change col names so that they match what is
+# expected by BlockManager.
+nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+
+nyData2020 <- nyData2020 |>
+  rename(GEOID = GEOID20) |>
+  select(nrv, ndv, vap, vap_white, GEOID) |>
+  mutate(GEOID = as.character(GEOID))
+
+# Get blocks and join block level data to it.
+nyAllBlocks2020 <- BlockManager$GetBlocks("NY")
+nyAllBlocks2020 <- BlockManager$JoinByGeoid(nyAllBlocks2020, nyData2020)
+
+# Translate CRS and make blocks into centroids.
+nyNewDistrictBlocks <- st_make_valid(nyNewDistrictBlocks)
+centrailizedBlocks <- st_make_valid(nyAllBlocks2020)
+centrailizedBlocks <- st_transform(centrailizedBlocks, st_crs(nyNewDistrictBlocks))
+centrailizedBlocks <- st_point_on_surface(centrailizedBlocks)
+
+# Perform spatial join.
+nyNewDistrictBlocks <- st_join(
+  nyNewDistrictBlocks,
+  centrailizedBlocks,
+  join = st_intersects
+)
+
+st_geometry(nyNewDistrictBlocks) <- st_geometry(nyAllBlocks2020)[
+  match(nyNewDistrictBlocks$GEOID, nyAllBlocks2020$GEOID)
+]
+
+nyWaterBlocks <- NULL
+for (i in seq_len(nrow(nyNewDistrictBlocks))) {
+  if (nyNewDistrictBlocks$vap[i] == 0) {
+    nyWaterBlocks <- rbind(nyWaterBlocks, nyNewDistrictBlocks[i,])
+  }
+}
+
+# Plot districts.
+ggplot() +
+  geom_sf(
+    data = nyNewDistrictBlocks, 
+    color = NA, 
+    aes(fill = 1 - (vap_white / vap)), 
+    linewidth = 0.5
+  ) +
+  scale_fill_gradient2(
+    low = "#461055",
+    mid = "#2A9A86",
+    high = "#FAEC5E",
+    midpoint = 0.5,
+    limits = c(0, 1)
+  ) +
+  theme_map() +
+  geom_sf(
+    data = nyWaterBlocks, 
+    fill = adjustcolor("blue", alpha.f = 0.5), 
+    color = NA, 
+    linewidth = 1.5) +
+  geom_sf(
+    data = nyNewDistrictBoundaries |> filter(DISTRICT == 10), 
+    color = "blue", 
+    linewidth = 2.0
+  ) +
+  geom_sf(
+    data = nyNewDistrictBoundaries |> filter(DISTRICT == 11), 
+    color = "red", 
+    linewidth = 2.0
+  ) +
+  geom_sf(
+    data = nyNewDistrictBoundaries, 
+    color = adjustcolor("#2B2B2B", alpha.f = 0.9), 
+    linewidth = 1.0
+  ) +
+  geom_sf_text(
+    data = nyNewDistrictBoundaries,
+    aes(label = DISTRICT),
+    size = 8,
+    color = "white"
+  )
+```
+
+# New York Extended Vote Share Map
+
+- **Description:**
+  - Recolored version of the minority map above attempting to display vote share.
+
+```{r warning=F, message=F, echo=F}
+# Read geometry of districts.
+nyNewDistricts <- st_read("../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
+
+# Remove unnecessary data and rename cols so that they match what is expected
+# by BlockManager.
+nyNewDistrictBlocks <- nyNewDistricts |>
+  select(OBJECTID, DISTRICT, geometry)
+
+dist11Adj <- st_touches(nyNewDistrictBlocks)[11]
+
+nyNewDistrictBoundaries <- nyNewDistrictBlocks[c(11, dist11Adj[[1]]),]
+nyNewDistrictBlocks <- nyNewDistrictBlocks[c(11, dist11Adj[[1]]),]
+
+# Read block level data. Change col names so that they match what is
+# expected by BlockManager.
+nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+
+nyData2020 <- nyData2020 |>
+  rename(GEOID = GEOID20) |>
+  select(nrv, ndv, vap, vap_white, GEOID) |>
+  mutate(GEOID = as.character(GEOID))
+
+# Get blocks and join block level data to it.
+nyAllBlocks2020 <- BlockManager$GetBlocks("NY")
+nyAllBlocks2020 <- BlockManager$JoinByGeoid(nyAllBlocks2020, nyData2020)
+
+# Translate CRS and make blocks into centroids.
+nyNewDistrictBlocks <- st_make_valid(nyNewDistrictBlocks)
+centrailizedBlocks <- st_make_valid(nyAllBlocks2020)
+centrailizedBlocks <- st_transform(centrailizedBlocks, st_crs(nyNewDistrictBlocks))
+centrailizedBlocks <- st_point_on_surface(centrailizedBlocks)
+
+# Perform spatial join.
+nyNewDistrictBlocks <- st_join(
+  nyNewDistrictBlocks,
+  centrailizedBlocks,
+  join = st_intersects
+)
+
+st_geometry(nyNewDistrictBlocks) <- st_geometry(nyAllBlocks2020)[
+  match(nyNewDistrictBlocks$GEOID, nyAllBlocks2020$GEOID)
+]
+
+nyWaterBlocks <- NULL
+for (i in seq_len(nrow(nyNewDistrictBlocks))) {
+  if (nyNewDistrictBlocks$vap[i] == 0) {
+    nyWaterBlocks <- rbind(nyWaterBlocks, nyNewDistrictBlocks[i,])
+  }
+}
+
+# Plot districts.
+ggplot() +
+  geom_sf(
+    data = nyNewDistrictBlocks, 
+    color = NA, 
+    aes(fill = ndv / (ndv + nrv)), 
+    linewidth = 0.5
+  ) +
+  scale_fill_party_c() +
+  theme_map() +
+  geom_sf(
+    data = nyWaterBlocks, 
+    fill = adjustcolor("gray", alpha.f = 1.0), 
+    color = NA, 
+    linewidth = 1.5) +
+  geom_sf(
+    data = nyNewDistrictBoundaries |> filter(DISTRICT == 10), 
+    color = "blue", 
+    linewidth = 2.0
+  ) +
+  geom_sf(
+    data = nyNewDistrictBoundaries |> filter(DISTRICT == 11), 
+    color = "red", 
+    linewidth = 2.0
+  ) +
+  geom_sf(
+    data = nyNewDistrictBoundaries, 
+    color = adjustcolor("#2B2B2B", alpha.f = 0.9), 
+    linewidth = 1.0
+  ) +
+  geom_sf_text(
+    data = nyNewDistrictBoundaries,
+    aes(label = DISTRICT),
+    size = 8,
+    color = "white"
+  )
+```

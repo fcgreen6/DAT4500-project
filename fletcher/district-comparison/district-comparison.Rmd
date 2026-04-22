@@ -7,7 +7,7 @@ output: md_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("BlockManager/Blockmanager.R")
+source("../BlockManager/Blockmanager.R")
 library(alarmdata)
 library(redist)
 library(ggredist)
@@ -26,7 +26,7 @@ library(sf)
 - **Link to data:** <https://redistrictingdatahub.org/dataset/2022-missouri-congressional-districts-approved-plan/>
 
 ```{r warning=F, message=F, echo=F}
-mapMoOld <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+mapMoOld <- st_read("../shape-files/mo-init-shape/5799H_02T.shp")
 mapMoOld |> 
   ggplot() +
   geom_sf() +
@@ -37,7 +37,7 @@ mapMoOld |>
 - **Link to data:** <https://redistrictingdatahub.org/dataset/2025-missouri-congressional-districts-plan/>
 
 ```{r warning=F, echo=F}
-mapMoNew <- st_read("shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
+mapMoNew <- st_read("../shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
 mapMoNew |> 
   ggplot() +
   geom_sf() +
@@ -50,7 +50,7 @@ mapMoNew |>
 - **Link to data:** <https://redistrictingdatahub.org/dataset/2022-new-york-congressional-districts-plan/>
 
 ```{r warning=F, message=F, echo=F}
-mapNyOld <- st_read("shape-files/ny-init-shape/CON22_June_03_2022.shp")
+mapNyOld <- st_read("../shape-files/ny-init-shape/CON22_June_03_2022.shp")
 mapNyOld |> 
   ggplot() +
   geom_sf() +
@@ -61,7 +61,7 @@ mapNyOld |>
 - **Link to data:** <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
 
 ```{r warning=F, echo=F}
-mapNyNew <- st_read("shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
+mapNyNew <- st_read("../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
 mapNyNew |> 
   ggplot() +
   geom_sf() +
@@ -80,7 +80,7 @@ mapNyNew |>
 ```{r warning=F, echo=F}
 # Read geometry of districts.
 moNewDistricts <- st_read(
-  "shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp"
+  "../shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp"
 )
 
 # Remove unnecessary data and rename cols so that they match what is expected
@@ -91,7 +91,7 @@ moNewDistricts <- moNewDistricts |>
 
 # Read block level data. Change col names so that they match what is
 # expected by BlockManager.
-moData2020 <- read.csv("mo_2020_vtd.csv")
+moData2020 <- read.csv("../csv/mo_2020_vtd.csv")
 moData2020 <- moData2020 |>
   rename(GEOID = GEOID20) |>
   select(nrv, ndv, GEOID) |>
@@ -117,7 +117,7 @@ ggplot() +
 
 ```{r warning=F, echo=F}
 # Read geometry of districts.
-moOldDistricts <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+moOldDistricts <- st_read("../shape-files/mo-init-shape/5799H_02T.shp")
 
 # Remove unnecessary data and rename cols so that they match what is expected
 # by BlockManager.
@@ -142,7 +142,7 @@ ggplot() +
 
 ```{r warning=F, echo=F}
 # Read geometry of districts.
-nyNewDistricts <- st_read("shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
+nyNewDistricts <- st_read("../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp")
 
 # Remove unnecessary data and rename cols so that they match what is expected
 # by BlockManager.
@@ -151,7 +151,7 @@ nyNewDistricts <- nyNewDistricts |>
 
 # Read block level data. Change col names so that they match what is
 # expected by BlockManager.
-nyData2020 <- read.csv("ny_2020_vtd.csv")
+nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
 nyData2020 <- nyData2020 |>
   rename(GEOID = GEOID20) |>
   select(nrv, ndv, GEOID) |>
@@ -177,7 +177,7 @@ ggplot() +
 
 ```{r warning=F, echo=F}
 # Read geometry of districts.
-nyOldDistricts <- st_read("shape-files/ny-init-shape/CON22_June_03_2022.shp")
+nyOldDistricts <- st_read("../shape-files/ny-init-shape/CON22_June_03_2022.shp")
 
 # Remove unnecessary data and rename cols so that they match what is expected
 # by BlockManager.
@@ -201,10 +201,10 @@ ggplot() +
 
 ```{r warning=F, echo=F}
 # Load new Missouri districts.
-mapMoNew <- st_read("shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
+mapMoNew <- st_read("../shape-files/mo-new-shape/HB1_Missouri_Congressional_Districts_2025.shp")
 
 # Load old Missouri districts.
-mapMoOld <- st_read("shape-files/mo-init-shape/5799H_02T.shp")
+mapMoOld <- st_read("../shape-files/mo-init-shape/5799H_02T.shp")
 
 # Filter out extra variables.
 mapMoNew <- mapMoNew |>
