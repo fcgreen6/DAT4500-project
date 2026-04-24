@@ -15,7 +15,7 @@
 <!-- -->
 
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON
@@ -33,7 +33,7 @@
 <!-- -->
 
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -53,7 +53,7 @@
 <!-- -->
 
     ## Reading layer `CON22_June_03_2022' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 28 features and 4 fields
     ## Geometry type: POLYGON
@@ -71,7 +71,7 @@
 <!-- -->
 
     ## Reading layer `con24' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 26 features and 2 fields
     ## Geometry type: MULTIPOLYGON
@@ -83,8 +83,20 @@
 
 # Improved Plots
 
+-   **Overview:** Similar to the plots above, except data has been
+    joined to color the maps based on republican and democrat voters.
+
+## Missouri
+
+-   **Version:** This is the second map enacted by Missouri following
+    the 2020 census.
+-   **Link to data:**
+    <https://redistrictingdatahub.org/dataset/2025-missouri-congressional-districts-plan/>
+
+<!-- -->
+
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -94,8 +106,15 @@
 
 ![](district-comparison_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
+-   **Version:** This is the first map enacted by Missouri following the
+    2020 census.
+-   **Link to data:**
+    <https://redistrictingdatahub.org/dataset/2022-missouri-congressional-districts-approved-plan/>
+
+<!-- -->
+
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON
@@ -113,8 +132,15 @@
 
 ![](district-comparison_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
+-   **Version:** This is the second map enacted by New York following
+    the 2020 census.
+-   **Link to data:**
+    <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
+
+<!-- -->
+
     ## Reading layer `con24' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 26 features and 2 fields
     ## Geometry type: MULTIPOLYGON
@@ -124,8 +150,15 @@
 
 ![](district-comparison_files/figure-markdown_strict/unnamed-chunk-7-1.png)
 
+-   **Version:** This is the first map enacted by New York following the
+    2020 census.
+-   **Link to data:**
+    <https://redistrictingdatahub.org/dataset/2022-new-york-congressional-districts-plan/>
+
+<!-- -->
+
     ## Reading layer `CON22_June_03_2022' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-init-shape\CON22_June_03_2022.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 28 features and 4 fields
     ## Geometry type: POLYGON
@@ -135,8 +168,17 @@
 
 ![](district-comparison_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
+# Missouri Overlayed Map
+
+-   **Overview:** A map of Missouri generated to show the cracking of
+    the Kansas City district. Orange is area retained between
+    redistrictings. White is area acquired between redistrictings. Blue
+    is the boundary of the former Kansas City district.
+
+<!-- -->
+
     ## Reading layer `HB1_Missouri_Congressional_Districts_2025' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-new-shape\HB1_Missouri_Congressional_Districts_2025.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 58 fields
     ## Geometry type: POLYGON
@@ -145,7 +187,7 @@
     ## Projected CRS: WGS 84 / Pseudo-Mercator
 
     ## Reading layer `5799H_02T' from data source 
-    ##   `C:\development\r\DAT4500-project\fletcher\district-comparison\shape-files\mo-init-shape\5799H_02T.shp' 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\mo-init-shape\5799H_02T.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 8 features and 11 fields
     ## Geometry type: POLYGON
