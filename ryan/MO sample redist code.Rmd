@@ -35,7 +35,7 @@ map_MO <- map_MO |>
 map_MO2 = redist_map(map_MO, existing_plan=cd_2020, pop_tol=0.01,
 total_pop = pop, adj = map_MO$adj)
 
-MO_plans = redist_smc(map_MO2, nsims=500)
+MO_plans = redist_smc(map_MO2, nsims=10)
 
 
 

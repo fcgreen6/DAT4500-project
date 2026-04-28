@@ -1,0 +1,75 @@
+---
+title: "testing functions"
+output: html_document
+---
+
+```{r}
+library(alarmdata)
+library(redist)
+library(dplyr)
+library(ggplot2)
+library(ggredist)
+library(patchwork)
+
+
+map_MO <- alarm_50state_map('MO')
+map_MO <- map_MO |>
+  mutate(vote_tot = nrv + ndv)
+
+map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
+
+MO_plans <- redist_smc(map_MO2, nsims = 50000)
+
+
+MO_plans = MO_plans |>
+    mutate(comp = comp_polsby(pl(), map_MO2),
+            pop_dev = plan_parity(map_MO2),
+           rep_vote = group_frac(map_MO2, nrv, vote_tot),
+           dem_vote = group_frac(map_MO2, ndv, vote_tot))
+
+```
+
+
+
+```{r}
+plan_summary <- MO_plans |>
+  group_by(draw) |>
+  summarise(
+    mean_comp   = mean(comp,      na.rm = TRUE),
+    mean_dem    = mean(dem_vote, na.rm = TRUE),
+    mean_rep    = mean(rep_vote, na.rm = TRUE),
+    max_pop_dev = max(abs(pop_dev), na.rm = TRUE))
+
+
+plan_summary <- plan_summary |>
+  mutate(
+    score_comp  = (mean_comp   - min(mean_comp)) / diff(range(mean_comp)),
+    score_dev   = 1 - (max_pop_dev - min(max_pop_dev)) / diff(range(max_pop_dev)),
+    score_dem   = (mean_dem    - min(mean_dem))    / diff(range(mean_dem)),
+    score_rep   = (mean_rep    - min(mean_rep))    / diff(range(mean_rep)),
+
+
+    total_score = (0.5 * score_comp) + (0.2 * score_dev) + (0.3 * score_rep)) |>
+  arrange(desc(total_score)) |>
+  mutate(rank = row_number())
+
+
+print(plan_summary |> select(rank, draw, mean_comp, max_pop_dev, mean_dem, mean_rep, total_score))
+
+```
+
+
+
+
+
+```{r}
+top_draws <- plan_summary |>
+  filter(draw != "cd_2020") |>
+  slice_head(n = 5) |>
+  pull(draw)
+
+redist.plot.plans(MO_plans,
+  draws = c("cd_2020", as.character(top_draws)),
+  shp   = map_MO2)
+```
+
