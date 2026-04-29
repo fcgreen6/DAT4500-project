@@ -1,0 +1,186 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidycensus)
+library(redist)
+library(sf)
+library(alarmdata)
+library(ggnewscale)
+library(redistmetrics)
+library(dplyr)
+```
+
+### Exercise 1
+census_api_key("d84f6074a7e95b068d1dbc2a2daeb05bf6ab224b", install = TRUE)
+
+
+
+```{r code-chunk-label}
+
+
+mo_tracts <- get_decennial(
+  geography = "tract",
+  variables = "P1_001N",
+  state = "MO",
+  year = 2020,
+  geometry = TRUE
+) |>
+  rename(pop = value)
+
+mo_map <- redist_map(mo_tracts, ndists = 8, pop_tol= 0.001, total_pop = pop)
+
+
+plot(mo_map)
+```
+
+### Exercise 2
+
+```{r}
+mo_plans <- redist_smc(mo_map, nsims = 5)
+print(mo_plans)
+
+redist.plot.plans(mo_plans, draws=c("1","2","3"), shp= mo_map)
+```
+
+```{r}
+MO_data <- get_decennial(
+  geography = "tract",
+  variables = c(
+    pop = "P1_001N",
+    vap = "P3_001N",
+    bvap = "P3_006N",
+    hvap = "P3_009N"
+  ),
+  state = "MO",
+  year = 2020,
+  geometry = TRUE,
+  output = "wide"
+)
+
+MO_data <- MO_data |>
+  mutate(country = substr(GEOID,1,5))
+
+MO_Minotry_Map <- redist_map(MO_data,
+                             ndists = 8,
+                             pop_tol = 0.01,
+                             total_pop = pop)
+  
+mo_constr <- redist_constr(MO_Minotry_Map)
+
+# 2. Add Compactness (The simple way)
+mo_constr <- add_constr_edges_rem(mo_constr, strength = 0.5)
+
+# 3. Add Minority Power (The correct argument is 'target')
+mo_constr <- add_constr_grp_pow(
+  mo_constr, 
+  group_pop = bvap,
+  total_pop = vap,
+  tgt_group = 0.45,  
+  strength = 10
+)
+
+# 4. Run it
+mo_MINORplans <- redist_smc(mo_map, nsims = 1000, constraints = mo_constr)
+
+redist.plot.plans(mo_MINORplans, draws = 5,shp =MO_Minotry_Map, qty = bvap / vap)
+```
+MO_Minor_Plans <- redist_smc(
+  map = mo_map,
+  nsims = 100,
+  counties = county,
+  constraints = list(
+    grp_pow = list(strenght = 10,
+                   group_pop = bvap,
+                   total_pop = vap,
+                   target_group_prop = 0.45)
+  )
+)
+
+
+
+mo_plans_df <- as_tibble(mo_MINORplans)
+
+# 2. Add your data columns directly
+# Since 'precinct' is the row index in your map, this matches them up perfectly
+mo_plans_df$pop  <- MO_Minotry_Map$pop[mo_plans_df$precinct]
+mo_plans_df$vap  <- MO_Minotry_Map$vap[mo_plans_df$precinct]
+mo_plans_df$bvap <- MO_Minotry_Map$bvap[mo_plans_df$precinct]
+
+plan_stats <- mo_MINORplans |>
+  group_by(draw,district) |>
+  summarize(
+    total_pop = sum(pop),
+    total_vap = sum(vap),
+    total_bvap = sum(bvap),
+    .groups = "drop"
+  ) |>
+  mutate(bvap_pct = total_bvap / total_vap)
+  
+head(plan_stats)
+  
+best_vra_plans <- mo_MINORplans |>
+  mutate(bvap_pct = bvap_districts) |>
+  group_by(draw) |>
+  summarize(max_bvap = max(bvap_pct)) |>
+  filter(max_bvap > 0.40) |>
+  arrange(desc(max_bvap))
+
+print(best_vra_plans)
+
+
+
+
+
+
+```{r}
+MO_Alarm <- alarm_50state_map("MO")
+
+MO5 <- MO_Alarm |>
+  filter( cd_2020 == "5")
+
+MO5_minority <- MO5 |>
+  mutate(minority_pct = (vap - vap_white) / vap * 100)
+
+ggplot(MO5_minority) +
+  geom_sf(aes(fill = minority_pct), color = NA) +
+  scale_fill_viridis_c(name = "% Minority") +
+  labs(
+    title = "Missouri Congressional District 5",
+    subtitle = "Minority Voting Age Population (%)"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+MO5_voting <- MO5 |>
+  mutate(lean = (adv_20 - arv_20)/ (adv_20 + arv_20))
+
+MO5_voting <- MO5_voting |>
+  mutate(
+    dem_lean = ifelse (lean >0, lean,NA),
+    rep_lean = ifelse(lean <0, abs(lean), NA)  
+  )
+
+ggplot() +
+ 
+  geom_sf(data = MO5_voting, aes(fill = adv_20 / (adv_20 + arv_20)), color = NA) +
+  
+  scale_fill_gradientn(
+    colors = c("#E91D0E", "#FFB6B6", "#B0C4DE", "#0015BC"),
+    values = c(0, 0.499, 0.501, 1),
+    name = "Partisan Lean"
+  ) +
+  theme_void() +
+  labs(title = "MO Districts 5")
+```
+
+...
+
