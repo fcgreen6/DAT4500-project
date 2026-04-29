@@ -38,7 +38,12 @@ plan_summary <- MO_plans |>
     mean_comp   = mean(comp,      na.rm = TRUE),
     mean_dem    = mean(dem_vote, na.rm = TRUE),
     mean_rep    = mean(rep_vote, na.rm = TRUE),
-    max_pop_dev = max(abs(pop_dev), na.rm = TRUE))
+    max_pop_dev = max(abs(pop_dev), na.rm = TRUE),
+    mean_competitiveness = mean(
+      pmin(abs(dem_vote - 0.5), abs(rep_vote - 0.5)),
+      na.rm = TRUE
+    ),
+    )
 
 
 plan_summary <- plan_summary |>
@@ -47,9 +52,10 @@ plan_summary <- plan_summary |>
     score_dev   = 1 - (max_pop_dev - min(max_pop_dev)) / diff(range(max_pop_dev)),
     score_dem   = (mean_dem    - min(mean_dem))    / diff(range(mean_dem)),
     score_rep   = (mean_rep    - min(mean_rep))    / diff(range(mean_rep)),
+    score_compete = 1 - (mean_competitiveness - min(mean_competitiveness)) /
+                        diff(range(mean_competitiveness)),
 
-
-    total_score = (0.5 * score_comp) + (0.2 * score_dev) + (0.3 * score_rep)) |>
+    total_score = (0.3 * score_comp) + (0.1 * score_dev) + (0.6 * score_compete)) |>
   arrange(desc(total_score)) |>
   mutate(rank = row_number())
 
