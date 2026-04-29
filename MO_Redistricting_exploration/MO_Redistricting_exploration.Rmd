@@ -89,7 +89,35 @@ mo_constr <- add_constr_grp_pow(
 # 4. Run it
 mo_MINORplans <- redist_smc(mo_map, nsims = 1000, constraints = mo_constr)
 
-redist.plot.plans(mo_MINORplans, draws = 5,shp =MO_Minotry_Map, qty = bvap / vap)
+redist.plot.plans(mo_MINORplans, draws = c(1,2,3,4,5,6),shp =MO_Minotry_Map)
+
+
+# 1. Get the assignment matrix (rows = tracts, columns = draws)
+# This removes the 'redist' formatting and gives us raw numbers
+assignments <- as.matrix(mo_MINORplans)
+
+# 2. Calculate BVAP % for every tract once
+bvap_vec <- MO_Minotry_Map$bvap / MO_Minotry_Map$vap
+
+# 3. Calculate the Max BVAP for every single draw
+# We use a loop to avoid any 'column not found' errors
+n_draws <- ncol(assignments)
+max_bvap_per_draw <- numeric(n_draws)
+
+for (i in 1:n_draws) {
+  # For each draw, calculate the mean BVAP for each of the 8 districts
+  district_means <- tapply(bvap_vec, assignments[, i], mean, na.rm = TRUE)
+  # Store the highest one found in that plan
+  max_bvap_per_draw[i] <- max(district_means)
+}
+
+# 4. Identify the Winner
+best_id <- which.max(max_bvap_per_draw)
+cat("The best map is Draw ID:", best_id, "\n")
+cat("It achieved a max BVAP of:", max_bvap_per_draw[best_id], "\n")
+
+# 5. Plot the result with district colors (No 'qty' argument)
+redist.plot.plans(mo_MINORplans, draws = best_id, shp = MO_Minotry_Map)
 ```
 MO_Minor_Plans <- redist_smc(
   map = mo_map,
