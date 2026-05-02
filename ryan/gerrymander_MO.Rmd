@@ -1,4 +1,9 @@
 ---
+title: "gerrymander_MO"
+output: html_document
+---
+
+---
 title: "testing functions"
 output: html_document
 ---
@@ -10,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(ggredist)
 library(patchwork)
+library(sf)
 
 
 map_MO <- alarm_50state_map('MO')
@@ -18,7 +24,7 @@ map_MO <- map_MO |>
 
 map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
 
-MO_plans <- redist_smc(map_MO2, nsims = 20)
+MO_plans <- redist_smc(map_MO2, nsims = 50000)
 
 
 MO_plans = MO_plans |>
@@ -31,64 +37,13 @@ MO_plans = MO_plans |>
 
 
 
-```{r}
-plan_summary <- MO_plans |>
-  group_by(draw) |>
-  summarise(
-    mean_comp   = mean(comp,      na.rm = TRUE),
-    mean_dem    = mean(dem_vote, na.rm = TRUE),
-    mean_rep    = mean(rep_vote, na.rm = TRUE),
-    max_pop_dev = max(abs(pop_dev), na.rm = TRUE),
-    mean_competitiveness = mean(
-      pmin(abs(dem_vote - 0.5), abs(rep_vote - 0.5)),
-      na.rm = TRUE
-    ),
-    )
-
-
-plan_summary <- plan_summary |>
-  mutate(
-    score_comp  = (mean_comp   - min(mean_comp)) / diff(range(mean_comp)),
-    score_dev   = 1 - (max_pop_dev - min(max_pop_dev)) / diff(range(max_pop_dev)),
-    score_dem   = (mean_dem    - min(mean_dem))    / diff(range(mean_dem)),
-    score_rep   = (mean_rep    - min(mean_rep))    / diff(range(mean_rep)),
-    score_compete = 1 - (mean_competitiveness - min(mean_competitiveness)) /
-                        diff(range(mean_competitiveness)),
-
-    total_score = (0.3 * score_comp) + (0.1 * score_dev) + (0.6 * score_compete)) |>
-  arrange(desc(total_score)) |>
-  mutate(rank = row_number())
-
-
-print(plan_summary |> select(rank, draw, mean_comp, max_pop_dev, mean_dem, mean_rep, total_score))
-
-```
-
-
-
-
-
-```{r}
-top_draws <- plan_summary |>
-  filter(draw != "cd_2020") |>
-  slice_head(n = 5) |>
-  pull(draw)
-
-redist.plot.plans(MO_plans,
-  draws = c("cd_2020", as.character(top_draws)),
-  shp   = map_MO2)
-
-```
-
-
-
 
 ```{r}
 
 #finds republican districts count
 
 MO_plans <- MO_plans |> 
-mutate(rep_district = rep_vote > 0.51)
+mutate(rep_district = rep_vote > 0.55)
 
 
 rep_counts <- MO_plans |>
@@ -104,6 +59,7 @@ rep_counts <- MO_plans |>
   ) |>
   arrange(desc(n_rep_districts))
 
+print(rep_counts)
 ```
 
 
@@ -119,19 +75,6 @@ best_plans <- rep_counts |>
 
 
 
-
-```{r}
-
-#graphs top districts
-
-#broken rn 
-
-plot_draws <- c("cd_2020", as.character(best_plans$draw))
-
-redist.plot.plans(MO_plans,
-  draws = c("cd_2020", as.character(best_plans)),
-  shp   = map_MO2)
-```
 
 
 ```{r}
@@ -163,14 +106,44 @@ redist.plot.plans(MO_plans,
                   draws = best,
                   shp   = map_MO2,
                   qty   = dem_vote) +
-  scale_fill_party_c(midpoint = 0.50) +
-  labs(
-    title    = paste("Best Gerrymandered Plan: Draw", best),
-    subtitle = paste0(max_rep, " Republican districts | Score: ", 
-                      round(best_plans$total_score[1], 3)),
-    fill     = "Rep. Vote Share"
-  )
+  scale_fill_party_c(midpoint = 0.50)
 ```
+
+
+
+
+```{r}
+
+temp <- get_plans_matrix(MO_plans)
+
+
+order_draw  <- unique(MO_plans$draw)
+best_draw    <- which(order_draw == best)
+best_assign <- temp[, best_draw]          
+
+district_sf <- map_MO2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
+redist.plot.plans(MO_plans,
+                  draws = best,
+                  shp   = map_MO2,
+                  qty   = dem_vote) +
+  scale_fill_party_c(midpoint = 0.50) +
+  geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",
+          linewidth   = 1.2,
+          inherit.aes = FALSE)
+
+```
+
+
+
+
 
 
 
@@ -198,13 +171,66 @@ redist.plot.plans(redblue,
   scale_fill_manual(
     values = setNames(my_colors, my_labels),
     drop   = FALSE                          
-  ) +
-  labs(
-    title    = paste("Best Gerrymandered Plan: Draw", best),
-    subtitle = paste0(max_rep, " Republican districts | Score: ",
-                      round(best_plans$total_score[1], 3)),
-    fill     = "Vote Margin"
   )
 
 ```
+
+
+```{r}
+
+
+my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
+my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
+                  "#d1e5f0","#92c5de","#4393c3","#2166ac")
+
+redblue <- MO_plans |>
+    mutate(margin = factor(
+        cut(dem_vote, breaks = my_cutpoints, labels = my_labels),
+        levels = my_labels))
+
+
+
+
+temp <- get_plans_matrix(MO_plans)
+
+
+all_draws   <- unique(MO_plans$draw)
+best_col    <- which(all_draws == best)
+best_assign <- temp[, best_col]          
+
+
+
+
+district_sf <- map_MO2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
+redist.plot.plans(redblue,
+                  draws = best,
+                  shp   = map_MO2,
+                  qty   = margin) +
+  scale_fill_manual(
+    values = setNames(my_colors, my_labels),
+    drop   = FALSE                          
+  ) +
+  geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",
+          linewidth   = 0.7,
+          inherit.aes = FALSE)
+```
+
+
+
+
+
+
+
+
+
 
