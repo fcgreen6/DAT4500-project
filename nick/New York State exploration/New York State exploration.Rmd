@@ -1,0 +1,177 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidycensus)
+library(redist)
+library(sf)
+library(alarmdata)
+library(ggnewscale)
+library(redistmetrics)
+library(dplyr)
+library(ggplot2)
+```
+
+### Loading Up datasets 
+
+
+```{r code-chunk-label}
+v20 <- load_variables(2020, "pl", cache = TRUE)
+
+
+View(v20)
+
+
+NY_data <- get_decennial(
+  geography = "tract",
+  variables = c(
+    pop = "P1_001N",
+    vap = "P3_001N",
+    wvap = "P3_003N",
+    bvap = "P3_004N",
+    hvap = "P4_002N"
+  ),
+  state = "NY",
+  year = "2020",
+  geometry = TRUE,
+  output = "wide"
+)
+
+NY_alarm <- alarm_50state_map("NY")
+```
+
+### Partisan Lean New York
+
+```{r}
+NY_district_outlines <- NY_alarm |>
+  group_by(cd_2020) |>
+  summarize(geometry = st_union(geometry))
+
+ggplot() +
+  geom_sf(data = NY_alarm, aes(fill = adv_20 / (adv_20 + arv_20)), color = "NA")  +
+  
+  geom_sf(data = NY_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  scale_fill_gradientn(
+    colors = c("#E91D0E", "#FFB6B6", "#B0C4DE", "#0015BC"),
+    values = c(0, 0.499, 0.501, 1),
+    name = "Partisan Lean"
+  ) +
+  theme_void() +
+  labs(title = "NY District Partisan lean")
+ 
+```
+### Minority Spread Map
+
+```{r}
+
+
+NY_minority <- NY_alarm |>
+  mutate(minority_pct = (vap - vap_white) / vap * 100)
+
+ggplot() +
+  
+  geom_sf(data = NY_minority, aes(fill = minority_pct), color = NA) +
+  
+  geom_sf(data = NY_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  
+  scale_fill_viridis_c(name = "% Minority") +
+  labs(
+    title = "New York Districts",
+    subtitle = "Minority Voting Age Population (%)"
+  ) +
+  theme_minimal()
+ 
+```
+
+### New York City Map
+```{r}
+NYC_districts <- c(5,6,7,8,9,10,11,12,13,14,15,16)
+NYC_map <- NY_alarm |>
+  filter(cd_2020 %in% NYC_districts)
+
+NYC_minority <- NYC_map |>
+  mutate(minority_pct = (vap - vap_white) / vap * 100)
+
+NYC_district_outlines <- NY_district_outlines |>
+  filter(cd_2020 %in% NYC_districts)
+
+ggplot() +
+  
+  geom_sf(data = NYC_minority, aes(fill = minority_pct), color = NA) +
+  
+  geom_sf(data = NYC_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  
+  scale_fill_viridis_c(name = "% Minority") +
+  labs(
+    title = "New York Districts",
+    subtitle = "Minority Voting Age Population (%)"
+  ) +
+  theme_minimal()
+```
+### NYC different minority races 
+```{r}
+NYC_race_map <- NYC_map |>
+  # Assuming your columns are named something like vap_black, vap_hisp, etc.
+  mutate(predominant_race = case_when(
+    vap_white > pmax(vap_black, vap_hisp, vap_asian, na.rm = TRUE) ~ "White",
+    vap_black > pmax(vap_white, vap_hisp, vap_asian, na.rm = TRUE) ~ "Black",
+    vap_hisp  > pmax(vap_white, vap_black, vap_asian, na.rm = TRUE) ~ "Hispanic",
+    vap_asian > pmax(vap_white, vap_black, vap_hisp, na.rm = TRUE) ~ "Asian"
+  ))
+
+ggplot(NYC_race_map) +
+  geom_sf(aes(fill = predominant_race), color = "white", linewidth = 0.1) +
+  scale_fill_brewer(palette = "Set1", name = "Largest Group") +
+  geom_sf(data = NYC_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  labs(title = "Predominant Race by District", subtitle = "Voting Age Population") +
+  theme_minimal()
+```
+
+```{r}
+NYC_long <- NYC_minority |>
+  mutate(
+    pct_white = (vap_white / vap) * 100,
+    pct_black = (vap_black / vap) * 100,
+    pct_hisp  = (vap_hisp / vap) * 100,
+    pct_asian = (vap_asian / vap) * 100
+  ) |>
+  pivot_longer(
+    cols = c(pct_white, pct_black, pct_hisp, pct_asian), 
+    names_to = "race_group", 
+    values_to = "pct_value"
+  ) |>
+  # Clean up labels (e.g., "pct_white" becomes "White")
+  mutate(race_group = stringr::str_to_title(gsub("pct_", "", race_group)))
+
+# 2. Create the Faceted Map
+ggplot(NYC_long) +
+  # The 'clipped' data from earlier would be best here to avoid water-fill
+  geom_sf(aes(fill = pct_value), color = "white", linewidth = 0.05) +
+  
+  # This creates 4 mini-maps in a 2x2 grid
+  facet_wrap(~race_group, ncol = 2) + 
+  
+  # 'magma' or 'viridis' are great for showing density
+  scale_fill_viridis_c(option = "magma", name = "% of VAP") +
+  
+  labs(
+    title = "Racial Distribution of Voting Age Population",
+    subtitle = "NYC Districts 5-16",
+    caption = "Data: NY_alarm"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid = element_blank(), # Removes background grid for a cleaner look
+    axis.text = element_blank()    # Removes lat/long coordinates
+  )
+```
+
+...
+
