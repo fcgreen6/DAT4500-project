@@ -1,0 +1,115 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(alarmdata)
+library(PL94171)
+library(tmap)
+```
+
+### New York State Map
+
+
+
+```{r code-chunk-label}
+NY_alarm <- alarm_50state_map("NY")
+
+NY_partisan <- NY_alarm |>
+  mutate(democrat_margin = round((adv_20 -arv_20)/ (adv_20 + arv_20)*100,2)) 
+
+NY_partisan |>
+  tm_shape() +
+  tm_polygons(fill = "democrat_margin")
+```
+
+### Color change
+
+```{r}
+my_colors <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
+               "#d1e5f0","#92c5de","#4393c3","#2166ac")
+my_cutpoints <- c(-100, -25, -10, -5, 0, 5, 10, 25, 100)
+
+NY_partisan |>
+  tm_shape() +
+  tm_polygons(fill = "democrat_margin",
+              lwd = 0.1,
+              fill.scale = tm_scale_intervals(n = 8,
+                            style = "fixed",
+                            breaks = my_cutpoints,
+                            values = my_colors))
+```
+
+
+### Minority Spread map
+
+```{r}
+NY_Pop <- NY_alarm |>
+  mutate(minority_pct = (pop-pop_white) / pop * 100)
+
+NY_outlines <- NY_alarm |>
+  group_by(cd_2020)|>
+  summarize(.groups = "drop")
+
+tmap_mode("view")
+
+tm_shape(NY_Pop) +
+  tm_fill(
+    "minority_pct",
+    palette ="YlOrRd",
+    title = "Minority %",
+    id = "cd_2020",
+    popup.vars = c("Total Population" = "pop", "Minority %" ="minority_pct"),
+    alpha = 0.7
+  ) +
+  tm_shape(NY_outlines)+
+  tm_borders(col = "black",
+             lwd =2,
+             group = "District Boundaries") +
+  tm_layout(title = "New York Congressional Districts: Minority Population") 
+```
+
+### Cleaning Up the water
+
+```{r}
+library(tigris)
+library(sf)
+
+# 1. Download the land boundary for NY (excluding water)
+# 'cb = TRUE' downloads the generalized (cleaner) coastline
+ny_land <- states(cb = TRUE, resolution = "500k") |>
+  filter(NAME == "New York") |>
+  st_transform(st_crs(NY_Pop)) # Ensure the coordinate systems match
+
+# 2. Clip your Precincts and Outlines to the land
+NY_Pop_Clipped <- st_intersection(NY_Pop, ny_land)
+NY_outlines_Clipped <- st_intersection(NY_outlines, ny_land)
+
+# 3. Plot the clipped version
+tmap_mode("view")
+
+tm_shape(NY_Pop_Clipped) +
+  tm_fill(
+    "minority_pct",
+    palette ="YlOrRd",
+    title = "Minority %",
+    id = "cd_2020",
+    border.alpha = 0, # Makes precinct joins invisible
+    alpha = 0.7
+  ) +
+  tm_shape(NY_outlines_Clipped) +
+  tm_borders(
+    col = "black",
+    lwd = 2,
+    group = "District Boundaries"
+  ) +
+  tm_layout(title = "Land-Clipped NY Minority Population")
+```
+
+...
+
