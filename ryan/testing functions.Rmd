@@ -4,6 +4,7 @@ output: html_document
 ---
 
 ```{r}
+#pl lvl 700 joins by GEOID
 library(alarmdata)
 library(redist)
 library(dplyr)

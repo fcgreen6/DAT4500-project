@@ -1,12 +1,10 @@
 ---
-title: "gerrymander_MO"
+title: "gerrymander_NY"
 output: html_document
 ---
 
----
-title: "testing functions"
-output: html_document
----
+
+
 
 ```{r}
 library(alarmdata)
@@ -19,64 +17,71 @@ library(sf)
 
 ```
 
+
+
 ```{r}
-map_MO <- alarm_50state_map('MO')
-map_MO <- map_MO |>
+map_NY <- alarm_50state_map('NY')
+map_NY <- map_NY |>
   mutate(vote_tot = nrv + ndv)
 
-map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
+map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-MO_plans <- redist_smc(map_MO2, nsims = 50000)
+NY_plans <- redist_smc(map_NY2, nsims = 20000)
 
 
-MO_plans = MO_plans |>
-    mutate(comp = comp_polsby(pl(), map_MO2),
-            pop_dev = plan_parity(map_MO2),
-           rep_vote = group_frac(map_MO2, nrv, vote_tot),
-           dem_vote = group_frac(map_MO2, ndv, vote_tot))
+NY_plans = NY_plans |>
+    mutate(comp = comp_polsby(pl(), map_NY2),
+            pop_dev = plan_parity(map_NY2),
+           dem_vote = group_frac(map_NY2, nrv, vote_tot),
+           dem_vote = group_frac(map_NY2, ndv, vote_tot))
 
-saveRDS(MO_plans, file = "C:/Users/Ryan Dinham/OneDrive/school/data society/MO_plans.rds")
+saveRDS(NY_plans, file = "C:/Users/Ryan Dinham/OneDrive/school/data society/NY_plans.rds")
 
 ```
+
+
+
 
 
 ```{r}
 #LOAD data
-map_MO <- alarm_50state_map('MO')
-map_MO <- map_MO |>
+map_NY <- alarm_50state_map('NY')
+map_NY <- map_NY |>
   mutate(vote_tot = nrv + ndv)
 
-map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
+map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-MO_plans <- readRDS("C:/Users/Ryan Dinham/OneDrive/school/data society/MO_plans.rds")
+NY_plans <- readRDS("C:/Users/ryand/OneDrive/school/data society/NY_plans.rds")
 
 ```
 
 
 
 
+
+
 ```{r}
 
-#finds republican districts count
+#finds democract districts count
 
-MO_plans <- MO_plans |> 
-mutate(rep_district = rep_vote > 0.55)
+NY_plans <- NY_plans |> 
+mutate(dem_district = dem_vote > 0.54)
 
 
-rep_counts <- MO_plans |>
+dem_counts <- NY_plans |>
   group_by(draw) |>
   summarise(
     mean_comp       = mean(comp,         na.rm = TRUE),
     max_pop_dev     = max(abs(pop_dev),  na.rm = TRUE),
-    n_rep_districts = sum(rep_district),
-    mean_rep_vote   = mean(rep_vote,     na.rm = TRUE),  # avg R share across districts
-    max_rep_vote    = max(rep_vote,      na.rm = TRUE),  # strongest R district
-    min_rep_vote    = min(rep_vote,      na.rm = TRUE),  # weakest R district
+    n_dem_districts = sum(dem_district),
+    mean_dem_vote   = mean(dem_vote,     na.rm = TRUE),  # avg R share across districts
+    max_dem_vote    = max(dem_vote,      na.rm = TRUE),  # strongest R district
+    min_dem_vote    = min(dem_vote,      na.rm = TRUE),  # weakest R district
     .groups = "drop"
   ) |>
-  arrange(desc(n_rep_districts))
+  arrange(desc(n_dem_districts))
 
-print(rep_counts)
+print(dem_counts)
 ```
 
 
@@ -84,10 +89,10 @@ print(rep_counts)
 
 
 ```{r}
-max_rep <- max(rep_counts$n_rep_districts)
+max_dem <- max(dem_counts$n_dem_districts)
 
-best_plans <- rep_counts |>
-  filter(n_rep_districts == max_rep)
+best_plans <- dem_counts |>
+  filter(n_dem_districts == max_dem)
 ```
 
 
@@ -111,14 +116,17 @@ best <- best_plans |>
   filter(rank == 1) |>
   pull(draw) |>
   as.character()
+
+
+print(best_plans |> select(rank, draw, mean_comp, max_pop_dev, total_score))
 ```
 
 
 ```{r}
-#map dem and reps
-redist.plot.plans(MO_plans,
+#map dem 
+redist.plot.plans(NY_plans,
                   draws = best,
-                  shp   = map_MO2,
+                  shp   = map_NY2,
                   qty   = dem_vote) +
   scale_fill_party_c(midpoint = 0.50)
 ```
@@ -128,29 +136,29 @@ redist.plot.plans(MO_plans,
 
 ```{r}
 
-temp <- get_plans_matrix(MO_plans)
+temp <- get_plans_matrix(NY_plans)
 
 
-order_draw  <- unique(MO_plans$draw)
+order_draw  <- unique(NY_plans$draw)
 best_draw    <- which(order_draw == best)
 best_assign <- temp[, best_draw]          
 
-district_sf <- map_MO2 |>
+district_sf <- map_NY2 |>
   mutate(district = best_assign) |>
   group_by(district) |>
   summarise(geometry = st_union(geometry), .groups = "drop")
 
 
 
-redist.plot.plans(MO_plans,
+redist.plot.plans(NY_plans,
                   draws = best,
-                  shp   = map_MO2,
+                  shp   = map_NY2,
                   qty   = dem_vote) +
   scale_fill_party_c(midpoint = 0.50) +
   geom_sf(data        = district_sf,
           fill        = NA,
           color       = "black",
-          linewidth   = .5,
+          linewidth   = 1.2,
           inherit.aes = FALSE)
 
 ```
@@ -167,12 +175,12 @@ redist.plot.plans(MO_plans,
 
   
 my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
-my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
-                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
+my_labels    <- c("R+15 or NYre", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or NYre")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
                   "#d1e5f0","#92c5de","#4393c3","#2166ac")
 
-redblue <- MO_plans |>
+redblue <- NY_plans |>
     mutate(margin = factor(
         cut(dem_vote, breaks = my_cutpoints, labels = my_labels),
         levels = my_labels))
@@ -180,7 +188,7 @@ redblue <- MO_plans |>
   
 redist.plot.plans(redblue,
                   draws = best,
-                  shp   = map_MO2,
+                  shp   = map_NY2,
                   qty   = margin) +         
   scale_fill_manual(
     values = setNames(my_colors, my_labels),
@@ -194,12 +202,12 @@ redist.plot.plans(redblue,
 
 
 my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
-my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
-                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
+my_labels    <- c("R+15 or NYre", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or NYre")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
-                  "#d1e5f0","#92c5de","#4393c3","#2166ac")
+                  "#d1e5f0","#92c5de","#4393c3","#174778")
 
-redblue <- MO_plans |>
+redblue <- NY_plans |>
     mutate(margin = factor(
         cut(dem_vote, breaks = my_cutpoints, labels = my_labels),
         levels = my_labels))
@@ -207,17 +215,17 @@ redblue <- MO_plans |>
 
 
 
-temp <- get_plans_matrix(MO_plans)
+temp <- get_plans_matrix(NY_plans)
 
 
-all_draws   <- unique(MO_plans$draw)
+all_draws   <- unique(NY_plans$draw)
 best_col    <- which(all_draws == best)
 best_assign <- temp[, best_col]          
 
 
 
 
-district_sf <- map_MO2 |>
+district_sf <- map_NY2 |>
   mutate(district = best_assign) |>
   group_by(district) |>
   summarise(geometry = st_union(geometry), .groups = "drop")
@@ -226,7 +234,7 @@ district_sf <- map_MO2 |>
 
 redist.plot.plans(redblue,
                   draws = best,
-                  shp   = map_MO2,
+                  shp   = map_NY2,
                   qty   = margin) +
   scale_fill_manual(
     values = setNames(my_colors, my_labels),
@@ -237,7 +245,12 @@ redist.plot.plans(redblue,
           color       = "black",
           linewidth   = 0.7,
           inherit.aes = FALSE)
+
+
+
 ```
+
+
 
 
 
