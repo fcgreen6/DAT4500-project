@@ -35,14 +35,7 @@ my_colors <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
                "#d1e5f0","#92c5de","#4393c3","#2166ac")
 my_cutpoints <- c(-100, -25, -10, -5, 0, 5, 10, 25, 100)
 
-NY_partisan |>
-  tm_shape() +
-  tm_polygons(fill = "democrat_margin",
-              lwd = 0.1,
-              fill.scale = tm_scale_intervals(n = 8,
-                            style = "fixed",
-                            breaks = my_cutpoints,
-                            values = my_colors))
+
 ```
 
 
@@ -99,6 +92,7 @@ tm_shape(NY_Pop_Clipped) +
     palette ="YlOrRd",
     title = "Minority %",
     id = "cd_2020",
+    popup.vars = c("Total Population" = "pop", "Minority %" ="minority_pct"),
     border.alpha = 0, # Makes precinct joins invisible
     alpha = 0.7
   ) +
@@ -109,6 +103,32 @@ tm_shape(NY_Pop_Clipped) +
     group = "District Boundaries"
   ) +
   tm_layout(title = "Land-Clipped NY Minority Population")
+```
+
+### Partisan tmap & cleaning up water
+
+```{r}
+NY_partisan_clipped <-st_intersection(NY_partisan, ny_land)
+
+tmap_mode("view")
+
+tm_shape(NY_partisan_clipped) +
+  tm_fill(
+    "democrat_margin",
+    palette = "RdBu",
+    title = "Partisan Map",
+    id = "cd_2020",
+    popup.vars = c("Average Republican Vote" = "arv_20", "Average Democrat Vote" = "adv_20", "democrat margin %" = "democrat_margin"),
+    border.alpha = 0,
+    alpha =0.7
+  ) +
+  tm_shape(NY_outlines_Clipped) +
+  tm_borders(
+    col = "black",
+    lwd = 2,
+    group = "District Boundaries"
+  ) +
+  tm_layout(title = "Partisan Vote Map of New York")
 ```
 
 ...
