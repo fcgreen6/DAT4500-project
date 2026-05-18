@@ -16,7 +16,6 @@ library(ggplot2)
 library(ggredist)
 library(patchwork)
 library(sf)
-
 ```
 
 ```{r}

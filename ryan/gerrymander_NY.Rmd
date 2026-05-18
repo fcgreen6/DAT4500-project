@@ -51,7 +51,7 @@ map_NY <- map_NY |>
 
 map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-NY_plans <- readRDS("C:/Users/ryand/OneDrive/school/data society/NY_plans.rds")
+NY_plans <- readRDS("C:/Users/ryan dinham/OneDrive/school/data society/NY_plans.rds")
 
 ```
 
@@ -65,7 +65,7 @@ NY_plans <- readRDS("C:/Users/ryand/OneDrive/school/data society/NY_plans.rds")
 #finds democract districts count
 
 NY_plans <- NY_plans |> 
-mutate(dem_district = dem_vote > 0.54)
+mutate(dem_district = dem_vote > 0.50)
 
 
 dem_counts <- NY_plans |>
@@ -175,8 +175,8 @@ redist.plot.plans(NY_plans,
 
   
 my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
-my_labels    <- c("R+15 or NYre", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
-                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or NYre")
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
                   "#d1e5f0","#92c5de","#4393c3","#2166ac")
 
@@ -202,8 +202,8 @@ redist.plot.plans(redblue,
 
 
 my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
-my_labels    <- c("R+15 or NYre", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
-                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or NYre")
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
                   "#d1e5f0","#92c5de","#4393c3","#174778")
 
@@ -243,19 +243,38 @@ redist.plot.plans(redblue,
   geom_sf(data        = district_sf,
           fill        = NA,
           color       = "black",
-          linewidth   = 0.7,
+          linewidth   = 0.4,
           inherit.aes = FALSE)
-
 
 
 ```
 
 
 
+```{r}
+#manhattan
 
 
-
-
+redist.plot.plans(redblue,
+                  draws = best,
+                  shp   = map_NY2,
+                  qty   = margin) +
+  scale_fill_manual(
+    values = setNames(my_colors, my_labels),
+    drop   = FALSE
+  ) +
+  geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",
+          linewidth   = 0.4,
+          inherit.aes = FALSE) +
+  coord_sf(
+    xlim   = c(-75.0, -73.0),
+    ylim   = c(40.20,  41.5),
+    crs    = 4326,
+    expand = FALSE
+  )
+```
 
 
 

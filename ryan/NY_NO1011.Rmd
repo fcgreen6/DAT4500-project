@@ -1,0 +1,127 @@
+---
+title: "NY_NO1011"
+output: html_document
+---
+
+```{r}
+library(alarmdata)
+library(redist)
+library(dplyr)
+library(ggplot2)
+library(ggredist)
+library(patchwork)
+library(sf)
+```
+
+
+```{r}
+map_NY <- alarm_50state_map('NY')
+map_NY <- map_NY |>
+  filter(!cd_2020 %in% c(10, 11)) |>
+  mutate(vote_tot = nrv + ndv)
+
+map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.0095, total_pop = pop, adj = map_NY$adj)
+
+NY_plans <- redist_smc(map_NY2, nsims = 22000)
+
+
+NY_plans = NY_plans |>
+    mutate(comp = comp_polsby(pl(), map_NY2),
+            pop_dev = plan_parity(map_NY2),
+           dem_vote = group_frac(map_NY2, nrv, vote_tot),
+           dem_vote = group_frac(map_NY2, ndv, vote_tot))
+
+saveRDS(NY_plans, file = "C:/Users/Ryan Dinham/OneDrive/school/data society/NY_Legal.rds")
+```
+
+
+
+
+
+
+```{r}
+#LOAD data
+map_NY <- alarm_50state_map('NY')
+map_NY <- map_NY |>
+  mutate(vote_tot = nrv + ndv)
+
+map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
+
+NY_plans <- readRDS("C:/Users/Ryand/OneDrive/school/data society/NY_Legal.rds")
+```
+
+
+
+
+
+
+```{r}
+NY_plans <- NY_plans |> 
+mutate(dem_district = dem_vote > 0.50)
+
+
+dem_counts <- NY_plans |>
+  group_by(draw) |>
+  summarise(
+    mean_comp       = mean(comp,         na.rm = TRUE),
+    max_pop_dev     = max(abs(pop_dev),  na.rm = TRUE),
+    n_dem_districts = sum(dem_district),
+    mean_dem_vote   = mean(dem_vote,     na.rm = TRUE),  # avg R share across districts
+    max_dem_vote    = max(dem_vote,      na.rm = TRUE),  # strongest R district
+    min_dem_vote    = min(dem_vote,      na.rm = TRUE),  # weakest R district
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_dem_districts))
+
+print(dem_counts)
+```
+
+
+
+
+```{r}
+max_dem <- max(dem_counts$n_dem_districts)
+
+best_plans <- dem_counts |>
+  filter(n_dem_districts == max_dem)
+```
+
+
+
+
+
+```{r}
+
+#ranks redistricts
+
+best_plans <- best_plans |>
+  mutate(
+    score_comp  = (mean_comp   - min(mean_comp)) / diff(range(mean_comp)),
+    score_dev   = 1 - (max_pop_dev - min(max_pop_dev)) / diff(range(max_pop_dev)),
+    total_score = (0.7 * score_comp) + (0.3 * score_dev)) |>
+  arrange(desc(total_score)) |>
+  mutate(rank = row_number())
+
+
+best <- best_plans |>
+  filter(rank == 1) |>
+  pull(draw) |>
+  as.character()
+
+
+print(best_plans |> select(rank, draw, mean_comp, max_pop_dev, total_score))
+```
+
+
+
+```{r}
+#map dem 
+redist.plot.plans(NY_plans,
+                  draws = best,
+                  shp   = map_NY2,
+                  qty   = dem_vote) +
+  scale_fill_party_c(midpoint = 0.50)
+```
+
+
+

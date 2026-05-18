@@ -113,11 +113,11 @@ scale_fill_gradient("Minority %",
 
 #party vote of MO
 
-my_cutpoints <- c(0,.35,.45,.49999,.5,.50001,.55,.65,1.00)
-my_labels <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1", 
-               "D+0 to D+1", "D+1 to D+5", "D+5 to D+15", "D+15 or more")
+my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
 my_colors <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
-               "#d1e5f0","#92c5de","#4393c3","#2166ac")
+                  "#d1e5f0","#92c5de","#4393c3","#174778")
 map_MO <- map_MO |>
   mutate(margin = cut(dem_perc, breaks = my_cutpoints, labels = my_labels))
 
