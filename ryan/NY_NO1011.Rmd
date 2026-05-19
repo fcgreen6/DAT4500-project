@@ -14,40 +14,17 @@ library(sf)
 ```
 
 
-```{r}
-map_NY <- alarm_50state_map('NY')
-map_NY <- map_NY |>
-  filter(!cd_2020 %in% c(10, 11)) |>
-  mutate(vote_tot = nrv + ndv)
-
-map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.0095, total_pop = pop, adj = map_NY$adj)
-
-NY_plans <- redist_smc(map_NY2, nsims = 22000)
-
-
-NY_plans = NY_plans |>
-    mutate(comp = comp_polsby(pl(), map_NY2),
-            pop_dev = plan_parity(map_NY2),
-           dem_vote = group_frac(map_NY2, nrv, vote_tot),
-           dem_vote = group_frac(map_NY2, ndv, vote_tot))
-
-saveRDS(NY_plans, file = "C:/Users/Ryan Dinham/OneDrive/school/data society/NY_Legal.rds")
-```
-
-
-
-
-
 
 ```{r}
 #LOAD data
 map_NY <- alarm_50state_map('NY')
 map_NY <- map_NY |>
+  filter(!cd_2020 %in% c(10, 11)) |>
   mutate(vote_tot = nrv + ndv)
 
 map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-NY_plans <- readRDS("C:/Users/Ryand/OneDrive/school/data society/NY_Legal.rds")
+NY_plans <- readRDS("C:/Users/Ryan dinham/OneDrive/school/data society/NY_Legal.rds")
 ```
 
 
@@ -57,18 +34,16 @@ NY_plans <- readRDS("C:/Users/Ryand/OneDrive/school/data society/NY_Legal.rds")
 
 ```{r}
 NY_plans <- NY_plans |> 
-mutate(dem_district = dem_vote > 0.50)
+mutate(dem_district = dem_vote > 0.55)
 
 
 dem_counts <- NY_plans |>
   group_by(draw) |>
   summarise(
-    mean_comp       = mean(comp,         na.rm = TRUE),
-    max_pop_dev     = max(abs(pop_dev),  na.rm = TRUE),
+    mean_comp       = mean(comp,        na.rm = TRUE),
+    min_comp        = min(comp,         na.rm = TRUE),  # worst district
+    max_pop_dev     = max(abs(pop_dev), na.rm = TRUE),
     n_dem_districts = sum(dem_district),
-    mean_dem_vote   = mean(dem_vote,     na.rm = TRUE),  # avg R share across districts
-    max_dem_vote    = max(dem_vote,      na.rm = TRUE),  # strongest R district
-    min_dem_vote    = min(dem_vote,      na.rm = TRUE),  # weakest R district
     .groups = "drop"
   ) |>
   arrange(desc(n_dem_districts))
@@ -79,13 +54,14 @@ print(dem_counts)
 
 
 
+
+
+
+
 ```{r}
-max_dem <- max(dem_counts$n_dem_districts)
-
 best_plans <- dem_counts |>
-  filter(n_dem_districts == max_dem)
+  filter(n_dem_districts %in% c(16, 17))
 ```
-
 
 
 
@@ -94,14 +70,23 @@ best_plans <- dem_counts |>
 
 #ranks redistricts
 
+
 best_plans <- best_plans |>
   mutate(
-    score_comp  = (mean_comp   - min(mean_comp)) / diff(range(mean_comp)),
-    score_dev   = 1 - (max_pop_dev - min(max_pop_dev)) / diff(range(max_pop_dev)),
-    total_score = (0.7 * score_comp) + (0.3 * score_dev)) |>
+    score_comp  = .8 * mean_comp + 0.2 * min_comp,
+    score_dev   = 1 - (max_pop_dev / 0.01),
+    total_score = (0.8 * score_comp) + (0.2 * score_dev)
+  ) |>
   arrange(desc(total_score)) |>
   mutate(rank = row_number())
 
+best <- best_plans |>
+  filter(rank == 2) |>
+  pull(draw) |>
+  as.character()
+
+print(best_plans |> select(rank, draw, score_comp, score_dev, total_score))
+    
 
 best <- best_plans |>
   filter(rank == 1) |>
@@ -109,19 +94,135 @@ best <- best_plans |>
   as.character()
 
 
-print(best_plans |> select(rank, draw, mean_comp, max_pop_dev, total_score))
+print(best_plans |> select(rank, draw, score_comp, score_dev, total_score))
 ```
 
 
 
 ```{r}
 #map dem 
+temp <- get_plans_matrix(NY_plans)
+
+
+order_draw  <- unique(NY_plans$draw)
+best_draw    <- which(order_draw == best)
+best_assign <- temp[, best_draw]          
+
+district_sf <- map_NY2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
 redist.plot.plans(NY_plans,
                   draws = best,
                   shp   = map_NY2,
                   qty   = dem_vote) +
-  scale_fill_party_c(midpoint = 0.50)
+  scale_fill_gradient2(
+    low      = "#B2182B",   # deep Republican red
+    mid      = "#F7F7F7",   # clean neutral white
+    high     = "#2166AC",   # strong Democratic blue
+    midpoint = 0.50,
+    limits   = c(0.30, 0.70),
+    oob      = scales::squish) +
+      geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",      # white borders pop better than black
+          linewidth   = .8,
+          inherit.aes = FALSE)
 ```
 
 
 
+
+
+
+```{r}
+my_cutpoints <- c(0, .35, .45, .49, .5, .51, .55, .65, 1.00)
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
+my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
+                  "#e8f4f8","#92c5de","#4393c3","#174778")
+
+redblue <- NY_plans |>
+    mutate(margin = factor(
+        cut(dem_vote, breaks = my_cutpoints, labels = my_labels),
+        levels = my_labels))
+
+
+
+
+temp <- get_plans_matrix(NY_plans)
+
+
+all_draws   <- unique(NY_plans$draw)
+best_col    <- which(all_draws == best)
+best_assign <- temp[, best_col]          
+
+
+
+
+district_sf <- map_NY2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
+redist.plot.plans(redblue,
+                  draws = best,
+                  shp   = map_NY2,
+                  qty   = margin) +
+  scale_fill_manual(
+    values = setNames(my_colors, my_labels),
+    drop   = FALSE                          
+  ) +
+  geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",
+          linewidth   = 0.4,
+          inherit.aes = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+map_NY <- map_NY |>
+  group_by(state) |>
+  summarise(vote_tot = sum(vote_tot), nrv = sum(nrv), ndv = sum(ndv)) |>
+  mutate(dem_perc = ndv / vote_tot)
+
+glimpse(map_NY)
+```
+
+
+
+
+
+
+```{r}
+#histogram of dem leaning district counts
+dem_counts|>
+  ggplot(aes(x = n_dem_districts)) +
+  geom_histogram()
+
+dem_counts |>
+  summarise(
+    min    = min(n_dem_districts),
+    q1     = quantile(n_dem_districts, 0.25),
+    median = median(n_dem_districts),
+    mean   = mean(n_dem_districts),
+    q3     = quantile(n_dem_districts, 0.75),
+    max    = max(n_dem_districts),
+    iqr    = IQR(n_dem_districts),
+    sd     = sd(n_dem_districts)
+  )
+```
