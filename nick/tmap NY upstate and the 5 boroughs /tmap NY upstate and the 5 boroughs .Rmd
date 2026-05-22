@@ -8,6 +8,12 @@ output: openintro::lab_report
 ```{r load-packages, message=FALSE}
 library(tidyverse)
 library(openintro)
+library(redist)
+library(redistmetrics)
+library(alarmdata)
+library(dplyr)
+library(sf)
+library(tmap)
 ```
 
 ### Exercise 1
@@ -15,10 +21,46 @@ library(openintro)
 Insert any text here.
 
 ```{r code-chunk-label}
-# Insert code for Exercise 1 here
+NY_alarm <- alarm_50state_map("NY")
+
+upstate_data <- NY_alarm |>
+  filter(cd_2020 >= 17)
+NY_outlines <- NY_alarm |>
+  group_by(cd_2020)|>
+  summarize(.groups = "drop")
 ```
 
 ### Exercise 2
+
+
+```{r}
+upstate_data <- upstate_data |>
+  mutate(
+    area_km2 = as.numeric(st_area(geometry)) / 1e6,
+    pop_density = as.numeric(pop)/ area_km2
+  ) |>
+  filter(!is.na(pop_density))
+tmap_mode("view")
+
+tm_shape(upstate_data) +
+  tm_fill(
+    "pop_density",
+    style = "quantile",
+    palette ="YlOrRd",
+    title = "Population Density",
+    id = "cd_2020",
+    popup.vars = c("Population Density" = "pop_density"),
+    border.alpha = 0.01, # Makes precinct joins invisible
+    alpha = 0.7
+  ) +
+  tm_shape(NY_outlines) +
+  tm_borders(
+    col = "black",
+    lwd = 2,
+    group = "District Boundaries"
+  ) +
+  tm_layout(title = "Upstate NY Population distribution")
+```
 
 ...
 
