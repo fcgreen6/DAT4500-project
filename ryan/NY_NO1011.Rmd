@@ -24,7 +24,7 @@ map_NY <- map_NY |>
 
 map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-NY_plans <- readRDS("C:/Users/Ryan dinham/OneDrive/school/data society/NY_Legal.rds")
+NY_plans <- readRDS("C:/Users/Ryand/OneDrive/school/data society/NY_Legal.rds")
 ```
 
 
@@ -187,6 +187,31 @@ redist.plot.plans(redblue,
 ```
 
 
+
+
+
+
+```{r}
+#NY_plans7    <- saved$plans
+#map_NY27     <- saved$map
+district_sf7 <- saved
+#best7        <- saved$best
+
+
+ggplot() +
+  geom_sf(data = district_sf7,
+          aes(fill = dem_vote),
+          color = "black",
+          linewidth = .8) +
+  scale_fill_gradient2(
+    low      = "#B2182B",
+    mid      = "#F7F7F7",
+    high     = "#2166AC",
+    midpoint = 0.50,
+    limits   = c(0.30, 0.70),
+    oob      = scales::squish) +
+  theme_void()
+```
 
 
 
