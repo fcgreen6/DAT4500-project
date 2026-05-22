@@ -110,6 +110,9 @@ tm_shape(NY_Pop_Clipped) +
 ```{r}
 NY_partisan_clipped <-st_intersection(NY_partisan, ny_land)
 
+NY_outlines_NY24 <- NY_outlines_Clipped |>
+  filter(cd_2020 == 24)
+
 tmap_mode("view")
 
 tm_shape(NY_partisan_clipped) +
@@ -128,8 +131,13 @@ tm_shape(NY_partisan_clipped) +
     lwd = 2,
     group = "District Boundaries"
   ) +
+  tm_shape(NY_outlines_NY24) +
+  tm_borders(
+    col = "lightyellow",
+    lwd = 4,
+    group = "District 24 Outline"
+  )+
   tm_layout(title = "Partisan Vote Map of New York")
 ```
-
 ...
 

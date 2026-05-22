@@ -53,6 +53,8 @@ map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop
 
 NY_plans <- readRDS("C:/Users/ryan dinham/OneDrive/school/data society/NY_plans.rds")
 
+
+
 ```
 
 
@@ -174,7 +176,7 @@ redist.plot.plans(NY_plans,
 ```{r}
 
   
-my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
+my_cutpoints <- c(0, .35, .45, .49, .5, .51, .55, .65, 1.00)
 my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
                   "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
@@ -201,7 +203,7 @@ redist.plot.plans(redblue,
 ```{r}
 
 
-my_cutpoints <- c(0, .35, .45, .49999, .5, .50001, .55, .65, 1.00)
+my_cutpoints <- c(0, .35, .45, .49, .5, .51, .55, .65, 1.00)
 my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
                   "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
 my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
