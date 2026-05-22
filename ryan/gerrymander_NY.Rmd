@@ -53,6 +53,8 @@ map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop
 
 NY_plans <- readRDS("C:/Users/ryan dinham/OneDrive/school/data society/NY_plans.rds")
 
+
+
 ```
 
 
