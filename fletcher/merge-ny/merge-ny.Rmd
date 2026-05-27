@@ -1,0 +1,60 @@
+---
+title: "merge-ny"
+author: "Fletcher Green"
+date: "2026-05-20"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(redist)
+library(redistmetrics)
+library(ggredist)
+library(sf)
+source("../BlockManager/Blockmanager.R")
+```
+
+# Merge NY
+
+## Goal: Merge custom districts 10 and eleven with other custom NY boundaries.
+
+```{r}
+tenAndEleven <- st_read("./shp/custom-bounds.shp")
+otherDists <- readRDS("./rds/NY_plans_best 1.rds")
+
+tenAndEleven <- tenAndEleven |>
+  mutate(OBJECTID = OBJECTID + 15) |>
+  mutate(DISTRICT = DISTRICT + 15)
+
+otherDists <- otherDists[, c("geometry", "district")]
+otherDists <- otherDists |>
+  rename(DISTRICT = district) |>
+  mutate(OBJECTID = DISTRICT)
+
+# Read geometry of districts.
+otherDists <- st_transform(otherDists, crs = st_crs(tenAndEleven))
+nyNewDistricts <- rbind(tenAndEleven, otherDists)
+
+# Read block level data. Change col names so that they match what is
+# expected by BlockManager.
+nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+nyData2020 <- nyData2020 |>
+  rename(GEOID = GEOID20) |>
+  select(nrv, ndv, GEOID) |>
+  mutate(GEOID = as.character(GEOID))
+
+# Get blocks and join block level data to it.
+nyBlocks2020 <- BlockManager$GetBlocks("NY")
+nyBlocks2020 <- BlockManager$JoinByGeoid(nyBlocks2020, nyData2020)
+
+# Consolidate blocks and their data into districts.
+nyNewDistricts <- BlockManager$ConsolodateDistricts(nyNewDistricts, nyBlocks2020)
+
+# Plot districts.
+ggplot() +
+  geom_sf(data = nyNewDistricts, aes(fill = ndv / (ndv + nrv)), linewidth = 0.7) +
+  scale_fill_party_c() +
+  theme_map() +
+  geom_district(data = nyNewDistricts, fill = NA, aes(group = TRUE), linewidth = 1.0)
+```
