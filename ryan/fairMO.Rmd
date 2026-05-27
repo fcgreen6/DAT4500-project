@@ -1,0 +1,299 @@
+---
+title: "fairMO"
+output: html_document
+---
+
+
+
+```{r}
+library(alarmdata)
+library(redist)
+library(dplyr)
+library(ggplot2)
+library(ggredist)
+library(patchwork)
+library(sf)
+```
+
+
+
+```{r}
+#LOAD data
+map_MO <- alarm_50state_map('MO')
+map_MO <- map_MO |>
+  mutate(vote_tot = nrv + ndv)
+
+map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
+
+MO_plans <- readRDS("C:/Users/ryan dinham/OneDrive/school/data society/MO_plans2.rds")
+```
+
+
+
+
+
+
+```{r}
+MO_plans <- MO_plans |> 
+mutate(rep_district = dem_vote < 0.45)
+
+
+rep_counts <- MO_plans |>
+  group_by(draw) |>
+  summarise(
+    mean_comp       = mean(comp,        na.rm = TRUE),
+    min_comp        = min(comp,         na.rm = TRUE),  # worst district
+    max_pop_dev     = max(abs(pop_dev), na.rm = TRUE),
+    n_rep_districts = sum(rep_district),
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_rep_districts))
+
+print(rep_counts)
+```
+
+
+
+
+
+
+
+
+```{r}
+best_plans <- rep_counts |>
+  filter(n_rep_districts %in% c(5))
+```
+
+
+
+
+```{r}
+
+#ranks redistricts
+
+
+best_plans <- best_plans |>
+  mutate(
+    score_comp  = .8 * mean_comp + 0.2 * min_comp,
+    score_dev   = 1 - (max_pop_dev / 0.01),
+    total_score = (0.8 * score_comp) + (0.2 * score_dev)
+  ) |>
+  arrange(desc(total_score)) |>
+  mutate(rank = row_number())
+
+best <- best_plans |>
+  filter(rank == 1) |>
+  pull(draw) |>
+  as.character()
+
+print(best_plans |> select(rank, draw, score_comp, score_dev, total_score))
+    
+
+```
+
+
+
+```{r}
+#map dem 
+temp <- get_plans_matrix(MO_plans)
+
+
+order_draw  <- unique(MO_plans$draw)
+best_draw    <- which(order_draw == best)
+best_assign <- temp[, best_draw]          
+
+district_sf <- map_MO2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
+redist.plot.plans(MO_plans,
+                  draws = best,
+                  shp   = map_MO2,
+                  qty   = dem_vote) +
+  scale_fill_gradient2(
+    low      = "#B2182B",   # deep Republican red
+    mid      = "#F7F7F7",   # clean neutral white
+    high     = "#2166AC",   # strong Democratic blue
+    midpoint = 0.50,
+    limits   = c(0.30, 0.70),
+    oob      = scales::squish) +
+      geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",      # white borders pop better than black
+          linewidth   = .8,
+          inherit.aes = FALSE)
+```
+
+
+
+
+
+
+```{r}
+my_cutpoints <- c(0, .35, .45, .49, .5, .51, .55, .65, 1.00)
+my_labels    <- c("R+15 or more", "R+5 to R+15", "R+1 to R+5", "R+0 to R+1",
+                  "D+0 to D+1",  "D+1 to D+5",  "D+5 to D+15","D+15 or more")
+my_colors    <- c("#b2182b","#d6604d","#f4a582","#fddbc7",
+                  "#e8f4f8","#92c5de","#4393c3","#174778")
+
+redblue <- MO_plans |>
+    mutate(margin = factor(
+        cut(dem_vote, breaks = my_cutpoints, labels = my_labels),
+        levels = my_labels))
+
+
+
+
+temp <- get_plans_matrix(MO_plans)
+
+
+all_draws   <- unique(MO_plans$draw)
+best_col    <- which(all_draws == best)
+best_assign <- temp[, best_col]          
+
+
+
+
+district_sf <- map_MO2 |>
+  mutate(district = best_assign) |>
+  group_by(district) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+
+
+redist.plot.plans(redblue,
+                  draws = best,
+                  shp   = map_MO2,
+                  qty   = margin) +
+  scale_fill_manual(
+    values = setNames(my_colors, my_labels),
+    drop   = FALSE                          
+  ) +
+  geom_sf(data        = district_sf,
+          fill        = NA,
+          color       = "black",
+          linewidth   = 0.4,
+          inherit.aes = FALSE)
+
+```
+
+
+
+
+
+
+```{r}
+#NY_plans7    <- saved$plans
+#map_NY27     <- saved$map
+#district_sf7 <- saved
+#best7        <- saved$best
+
+
+ggplot() +
+  geom_sf(data = district_sf7,
+          aes(fill = dem_vote),
+          color = "black",
+          linewidth = .8) +
+  scale_fill_gradient2(
+    low      = "#B2182B",
+    mid      = "#F7F7F7",
+    high     = "#2166AC",
+    midpoint = 0.50,
+    limits   = c(0.30, 0.70),
+    oob      = scales::squish) +
+  theme_void()
+```
+
+
+
+
+
+
+
+```{r}
+map_MO <- map_MO |>
+  group_by(state) |>
+  summarise(vote_tot = sum(vote_tot), nrv = sum(nrv), ndv = sum(ndv)) |>
+  mutate(dem_perc = ndv / vote_tot)
+
+glimpse(map_MO)
+```
+
+
+
+
+
+
+```{r}
+#histogram of dem leaning district counts
+dem_counts|>
+  ggplot(aes(x = n_rep_districts)) +
+  geom_histogram()
+
+dem_counts |>
+  summarise(
+    min    = min(n_rep_districts),
+    q1     = quantile(n_rep_districts, 0.25),
+    median = median(n_rep_districts),
+    mean   = mean(n_rep_districts),
+    q3     = quantile(n_rep_districts, 0.75),
+    max    = max(n_rep_districts),
+    iqr    = IQR(n_rep_districts),
+    stdev     = sd(n_rep_districts)
+  )
+```
+
+
+
+
+
+
+
+```{r}
+plot(MO_plans, dem_vote, size=0.5, color_thresh=0.5) +
+    scale_color_manual(values=c("black", "tomato2", "dodgerblue")) +
+      labs(
+    title   = "Democratic vote share by district",
+    x       = "District",
+    y       = "Democratic Vote Share"
+  )
+```
+
+
+```{r}
+MO_plans = match_numbers(MO_plans, map_MO2$cd_2020)
+
+MO_plans <- MO_plans |> 
+mutate(dem_district = dem_vote > 0.55)
+
+
+dem_counts <- MO_plans |>
+  group_by(draw) |>
+  summarise(
+    mean_comp       = mean(comp,        na.rm = TRUE),
+    min_comp        = min(comp,         na.rm = TRUE),  # worst district
+    max_pop_dev     = max(abs(pop_dev), na.rm = TRUE),
+    n_dem_districts = sum(dem_district),
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_dem_districts))
+
+print(dem_counts)
+```
+
+
+
+
+
+
+
+```{r}
+plot(MO_plans, dem_vote, sort=FALSE, size=0.5)
+```
+
+
+
+
