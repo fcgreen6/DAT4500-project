@@ -1,0 +1,499 @@
+# Custom Redistricting Test
+
+## Goal: Make a basic algorithm capable of creating custom district boundaries for two districts based on minority VAP and compactness.
+
+### Section 1: Make Start Districts
+
+    nyNewDistricts <- st_read(
+      "../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp"
+    )
+
+    ## Reading layer `con24' from data source 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   using driver `ESRI Shapefile'
+    ## Simple feature collection with 26 features and 2 fields
+    ## Geometry type: MULTIPOLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 105571.2 ymin: 4480943 xmax: 770761.9 ymax: 4985476
+    ## Projected CRS: NAD83 / UTM zone 18N
+
+    nyNewDistricts <- nyNewDistricts |>
+      filter(DISTRICT == 10 | DISTRICT == 11) |>
+      select(OBJECTID, DISTRICT, geometry)
+
+    nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+    nyData2020 <- nyData2020 |>
+      rename(GEOID = GEOID20) |>
+      select(pop, nrv, ndv, vap, vap_white, vap_hisp, vap_black, GEOID) |>
+      mutate(GEOID = as.character(GEOID))
+
+    nyAllBlocks2020 <- BlockManager$GetBlocks("NY")
+    nyAllBlocks2020 <- BlockManager$JoinByGeoid(nyAllBlocks2020, nyData2020)
+
+    nyNewDistricts <- st_make_valid(nyNewDistricts)
+    centrailizedBlocks <- st_make_valid(nyAllBlocks2020)
+    centrailizedBlocks <- st_transform(centrailizedBlocks, st_crs(nyNewDistricts))
+    centrailizedBlocks <- st_point_on_surface(centrailizedBlocks)
+
+    distBlocks <- st_join(
+      nyNewDistricts,
+      centrailizedBlocks,
+      join = st_intersects
+    )
+    st_geometry(distBlocks) <- st_geometry(nyAllBlocks2020)[
+      match(distBlocks$GEOID, nyAllBlocks2020$GEOID)
+    ]
+
+    nyWaterBlocks <- NULL
+    for (i in seq_len(nrow(distBlocks))) {
+      if (distBlocks$vap[i] == 0) {
+        nyWaterBlocks <- rbind(nyWaterBlocks, distBlocks[i,])
+      }
+    }
+
+    nyWaterGeom <- st_union(nyWaterBlocks)
+
+    nyWaterGeom <- st_transform(nyWaterGeom, st_crs(nyNewDistricts))
+    distTenParts <- st_difference(
+      nyNewDistricts |> filter(DISTRICT == 10),
+      nyWaterGeom
+    )
+    distTenParts <- st_cast(distTenParts, "POLYGON")
+
+    distElevenParts <- st_difference(
+      nyNewDistricts |> filter(DISTRICT == 11),
+      nyWaterGeom
+    )
+    distElevenParts <- st_cast(distElevenParts, "POLYGON")
+
+    largestDistElement <- distElevenParts[1,]
+    largestDistElementIdx <- 1
+    secondLargestDistElement <- NULL
+    secondLargestDistElementIdx <- NULL
+    for (i in seq_len(nrow(distElevenParts))) {
+      if (st_area(distElevenParts[i,]) > st_area(largestDistElement)) {
+        secondLargestDistElement <- largestDistElement
+        secondLargestDistElementIdx <- largestDistElementIdx
+        largestDistElement <- distElevenParts[i,]
+        largestDistElementIdx <- i
+      }
+    }
+
+    dist11MainlandBlocks <- st_join(
+      secondLargestDistElement,
+      centrailizedBlocks,
+      join = st_intersects
+    )
+    st_geometry(dist11MainlandBlocks) <- st_geometry(nyAllBlocks2020)[
+      match(dist11MainlandBlocks$GEOID, nyAllBlocks2020$GEOID)
+    ]
+    dist11MainlandBlocks <- dist11MainlandBlocks |>
+          group_by(DISTRICT) |>
+          summarize(across(where(is.numeric), sum, na.rm = TRUE))
+    dist11MainlandPop <- as.numeric(dist11MainlandBlocks$pop[1])
+    rm(dist11MainlandBlocks)
+
+    distElevenParts <- distElevenParts[-secondLargestDistElementIdx,]
+    distElevenParts <- st_union(distElevenParts, nyWaterGeom)
+    distElevenParts <- st_snap(distElevenParts, distElevenParts, tolerance = 1)
+    distElevenParts <- st_union(distElevenParts)
+    distElevenParts <- st_cast(distElevenParts, "POLYGON")
+
+    largestDistElement <- distElevenParts[1,]
+    for (i in seq_len(length(distElevenParts))) {
+      if (st_area(distElevenParts[i,]) > st_area(largestDistElement)) {
+        largestDistElement <- distElevenParts[i,]
+        largestDistElementIdx <- i
+      }
+    }
+    distElevenMod <- largestDistElement
+    distElevenMod <- st_sf(geometry = distElevenMod)
+    distElevenMod$DISTRICT <- 11
+    distElevenMod$OBJECTID <- 11
+
+
+    distTenMod <- st_union(
+      nyNewDistricts |> filter(DISTRICT == 10 ), 
+      secondLargestDistElement
+    )
+    distTenMod <- st_difference(
+      distTenMod,
+      distElevenMod
+    ) |>
+      select(DISTRICT, OBJECTID, geometry)
+
+    rm(centrailizedBlocks)
+    rm(distElevenParts)
+    rm(distBlocks)
+    rm(distTenParts)
+    rm(largestDistElement)
+    rm(nyData2020)
+    rm(nyWaterGeom)
+    rm(secondLargestDistElement)
+    rm(i)
+    rm(largestDistElementIdx)
+    rm(secondLargestDistElementIdx)
+
+    # Create confirmation plot.
+    ggplot() +
+      geom_sf(data = distTenMod) +
+      geom_sf(data = distElevenMod) +
+      theme_map()
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-1-1.png)
+
+### Section 2: Mainland and Statin Island Redistricting
+
+    distElevenTest1 <- distElevenMod
+    distTenTest1 <- distTenMod
+    distTenTest1 <- st_cast(distTenTest1, "POLYGON")
+    distTenTest1 <- distTenTest1[1,]
+
+    nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+    nyData2020 <- nyData2020 |>
+      rename(GEOID = GEOID20) |>
+      select(pop, nrv, ndv, vap, vap_white, vap_hisp, vap_black, GEOID) |>
+      mutate(GEOID = as.character(GEOID))
+
+    nyAllBlocks2020 <- BlockManager$GetBlocks("NY")
+    nyAllBlocks2020 <- BlockManager$JoinByGeoid(nyAllBlocks2020, nyData2020)
+
+    distTenTest1 <- st_make_valid(distTenTest1)
+    centrailizedBlocks <- st_make_valid(nyAllBlocks2020)
+    centrailizedBlocks <- st_transform(centrailizedBlocks, st_crs(distTenTest1))
+    centrailizedBlocks <- st_point_on_surface(centrailizedBlocks)
+
+    distTenBlocks <- st_join(
+      distTenTest1,
+      centrailizedBlocks,
+      join = st_intersects
+    )
+    st_geometry(distTenBlocks) <- st_geometry(nyAllBlocks2020)[
+      match(distTenBlocks$GEOID, nyAllBlocks2020$GEOID)
+    ]
+    distTenBlocks <- st_snap(distTenBlocks, distTenBlocks, tolerance = 1)
+    distTenSumarized <- distTenBlocks |>
+          group_by(DISTRICT) |>
+          summarize(across(where(is.numeric), sum, na.rm = TRUE))
+    newDistTenPop <- as.numeric(distTenSumarized$pop[1])
+    rm(distTenSumarized)
+
+    distTenMap <- redist_map(
+      distTenBlocks,
+      total_pop = pop,
+      ndists = ceiling(newDistTenPop / dist11MainlandPop)
+    )
+
+    distTenSim <- redist_smc(distTenMap, nsims = 1, compactness = 0.47)
+
+    ## SEQUENTIAL MONTE CARLO
+    ## Sampling 1 676-unit maps with 4 districts and population between 261406 and 266687.
+
+    ## Split [0/3] ■                                | ETA?Split [3/3] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  | ETA 0s
+
+    distTenOptions <- NULL
+    distElevenData <- NULL
+    distElevenOptions <- NULL
+    for (i in 1:ncol(get_plans_matrix(distTenSim))) {
+      distTenGroups <- distTenBlocks
+      distTenGroups$MAINLANDGROUP <- get_plans_matrix(distTenSim)[, i]
+      distTenGroupData <- distTenGroups |>
+        group_by(MAINLANDGROUP) |>
+        summarize(across(where(is.numeric), sum, na.rm = TRUE)) |>
+        mutate(pctminority = 1 - (vap_white / vap))
+      distTenGroupData <- st_drop_geometry(distTenGroupData)
+      distTenGroupGeometry <- distTenGroups |>
+        select(MAINLANDGROUP, geometry) |>
+        group_by(MAINLANDGROUP) |>
+        summarize(geometry = st_union(geometry))
+      for (j in 1:ceiling(newDistTenPop / dist11MainlandPop)) {
+        continuousDistrict <- st_union(st_geometry(distTenGroupGeometry[-j,]))
+        if (!(length(st_cast(continuousDistrict, "POLYGON")) > 1)) {
+          distElevenTest1 <- st_transform(distElevenTest1, st_crs(distTenGroupGeometry[j, ]))
+          if (any(
+            st_touches(
+              st_snap(distElevenTest1, distTenGroupGeometry[j,], tolerance = 1),
+              distTenGroupGeometry[j, ], 
+              sparse = FALSE
+            )
+          )) {
+            distElevenOptions <- bind_rows(distElevenOptions, distTenGroupGeometry[j, ])
+            distElevenData <- bind_rows(distElevenData, distTenGroupData[j, ])
+            distTenOptions <- bind_rows(
+              distTenOptions,
+              st_sf(
+                st_union(distTenGroupGeometry[-j,])
+              )
+            )
+          }
+        }
+      }
+    }
+
+    distElevenData <- distElevenData |> arrange(desc(pctminority))
+    newOrder <- order(distElevenData$pctminority)
+    distElevenOptions <- distElevenOptions[newOrder,]
+    distTenOptions <- distTenOptions[newOrder,]
+    distTenOptions <- distTenOptions |> rename(geometry = st_union.distTenGroupGeometry..j....)
+    distTenOptions <- st_as_sf(distTenOptions, sf_column_name = "geometry")
+    distElevenOptions <- distElevenOptions |> select(-MAINLANDGROUP)
+
+    rm(centrailizedBlocks)
+    rm(continuousDistrict)
+    rm(distElevenData)
+    rm(distElevenTest1)
+    rm(distTenBlocks)
+    rm(distTenGroupData)
+    rm(distTenGroupGeometry)
+    rm(distTenGroups)
+    rm(distTenMap)
+    rm(distTenSim)
+    rm(distTenTest1)
+    rm(nyData2020)
+    rm(dist11MainlandPop)
+    rm(i)
+    rm(j)
+    rm(newDistTenPop)
+    rm(newOrder)
+
+    # Create confirmation plot. This plot is the district 11 with highest percent minority.
+    ggplot() +
+      geom_sf(data = distTenOptions[1,]) +
+      geom_sf(data = distElevenOptions[1,]) +
+      theme_map()
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-2-1.png)
+
+### Section 3: Spliting Districts 10 and 11 into Two Pieces Redistrictig
+
+    distTest <- nyNewDistricts
+    distTest <- st_cast(distTest, "POLYGON")
+
+    nyData2020 <- read.csv("../csv/ny_2020_vtd.csv")
+    nyData2020 <- nyData2020 |>
+      rename(GEOID = GEOID20) |>
+      select(pop, nrv, ndv, vap, vap_white, vap_hisp, vap_black, GEOID) |>
+      mutate(GEOID = as.character(GEOID))
+
+    nyAllBlocks2020 <- BlockManager$GetBlocks("NY")
+    nyAllBlocks2020 <- BlockManager$JoinByGeoid(nyAllBlocks2020, nyData2020)
+
+    distTest <- st_make_valid(distTest)
+    centrailizedBlocks <- st_make_valid(nyAllBlocks2020)
+    centrailizedBlocks <- st_transform(centrailizedBlocks, st_crs(distTest))
+    centrailizedBlocks <- st_point_on_surface(centrailizedBlocks)
+
+    testBlocks <- st_join(
+      distTest,
+      centrailizedBlocks,
+      join = st_intersects
+    )
+    st_geometry(testBlocks) <- st_geometry(nyAllBlocks2020)[
+      match(testBlocks$GEOID, nyAllBlocks2020$GEOID)
+    ]
+    testBlocks <- st_snap(testBlocks, testBlocks, tolerance = 1)
+
+    distMap <- redist_map(
+      testBlocks,
+      total_pop = pop,
+      ndists = 2
+    )
+
+    distSim <- redist_smc(distMap, nsims = 1, compactness = 0.8)
+
+    ## SEQUENTIAL MONTE CARLO
+    ## Sampling 1 959-unit maps with 2 districts and population between 768207 and 783727.
+
+    ## Split [0/1] ■                                | ETA?Split [1/1] ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  | ETA 0s
+
+    dist1options <- NULL
+    dist2options <- NULL
+    dist1data <- NULL
+    dist2data <- NULL
+    for (i in 1:ncol(get_plans_matrix(distSim))) {
+      distGroups <- testBlocks
+      distGroups$MAINLANDGROUP <- get_plans_matrix(distSim)[, i]
+      distGroupData <- distGroups |>
+        group_by(MAINLANDGROUP) |>
+        summarize(across(where(is.numeric), sum, na.rm = TRUE)) |>
+        mutate(pctminority = 1 - (vap_white / vap))
+      distGroupData <- st_drop_geometry(distGroupData)
+      distGroupGeometry <- distGroups |>
+        select(MAINLANDGROUP, geometry) |>
+        group_by(MAINLANDGROUP) |>
+        summarize(geometry = st_union(geometry))
+      
+      dist1data <- bind_rows(dist1data, distGroupData |> filter(MAINLANDGROUP == 1))
+      dist2data <- bind_rows(dist2data, distGroupData |> filter(MAINLANDGROUP == 2))
+      dist1options <- bind_rows(dist1options, distGroupGeometry |> filter(MAINLANDGROUP == 1))
+      dist2options <- bind_rows(dist2options, distGroupGeometry |> filter(MAINLANDGROUP == 2))
+    }
+
+    dist1data <- dist1data |> arrange(desc(pctminority))
+    newOrder <- order(dist1data$pctminority)
+    dist1options <- dist1options[newOrder,]
+    dist2options <- dist2options[newOrder,]
+
+    rm(centrailizedBlocks)
+    rm(dist1data)
+    rm(dist2data)
+    rm(distGroupData)
+    rm(distGroupGeometry)
+    rm(distMap)
+    rm(distSim)
+    rm(distTen)
+    rm(distTest)
+    rm(nyData2020)
+    rm(testBlocks)
+    rm(distGroups)
+    rm(i)
+    rm(newOrder)
+
+    # Create confirmation plot. This plot is the district 11 with highest percent minority.
+    ggplot() +
+      geom_sf(data = dist1options[1,]) +
+      geom_sf(data = dist2options[1,]) +
+      theme_map()
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-3-1.png)
+
+### Section 4: Plotting 2 Parts Redistricting
+
+      d1 <- dist1options[1,] |>
+        select(geometry) |>
+        mutate(OBJECTID = 10) |>
+        mutate(DISTRICT = 10)
+
+      d2 <- dist2options[1,] |>
+        select(geometry) |>
+        mutate(OBJECTID = 11) |>
+        mutate(DISTRICT = 11)
+      distElevenPlot <- BlockManager$ConsolodateDistricts(d1, nyAllBlocks2020)
+      distTenPlot <- BlockManager$ConsolodateDistricts(d2, nyAllBlocks2020)
+
+      ggplot() +
+        geom_sf(data = distTenPlot, aes(fill = ndv / (nrv + ndv))) +
+        geom_sf(data = distElevenPlot, aes(fill = ndv / (nrv + ndv))) +
+        geom_sf(data = nyWaterBlocks, fill = "gray", color = NA) +
+        scale_fill_party_c() +
+        theme_map()
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-4-1.png)
+
+### Section 6: Plotting Mainland + Statin Island Redistricting
+
+    PlotVoteShare <- function(ten, eleven) {
+      distElevenPlot <- st_union(
+        distElevenMod, 
+        st_transform(eleven, crs = st_crs(distElevenMod))
+      )
+      distTenPlot <- ten
+      distTenPlot <- distTenPlot |>
+        mutate(DISTRICT = 10) |>
+        mutate(OBJECTID = 10)
+
+      distElevenPlot <- BlockManager$ConsolodateDistricts(distElevenPlot, nyAllBlocks2020)
+      distTenPlot <- BlockManager$ConsolodateDistricts(distTenPlot, nyAllBlocks2020)
+
+      ggplot() +
+        geom_sf(data = distTenPlot, aes(fill = ndv / (nrv + ndv))) +
+        geom_sf(data = distElevenPlot, aes(fill = ndv / (nrv + ndv))) +
+        geom_sf(data = nyWaterBlocks, fill = "gray", color = NA) +
+        scale_fill_party_c() +
+        theme_map()
+    }
+
+    PlotMinority <- function(ten, eleven) {
+      distElevenPlot <- st_union(
+        distElevenMod, 
+        st_transform(eleven, crs = st_crs(distElevenMod))
+      )
+      distTenPlot <- ten
+      distTenPlot <- distTenPlot |>
+        mutate(DISTRICT = 10) |>
+        mutate(OBJECTID = 10)
+
+      distElevenPlot <- BlockManager$ConsolodateDistricts(distElevenPlot, nyAllBlocks2020)
+      distTenPlot <- BlockManager$ConsolodateDistricts(distTenPlot, nyAllBlocks2020)
+
+      ggplot() +
+        geom_sf(data = distTenPlot, aes(fill = 1 - (vap_white / vap))) +
+        geom_sf(data = distElevenPlot, aes(fill = 1 - (vap_white / vap))) +
+        geom_sf(data = nyWaterBlocks, fill = "gray", color = NA) +
+        scale_fill_gradient2(
+          low = "#461055",
+          mid = "#2A9A86",
+          high = "#FAEC5E",
+          midpoint = 0.5,
+          limits = c(0, 1)
+        ) +
+        theme_map() +
+        labs(
+          fill = "Percent Minority"
+        )
+    }
+
+    nyNewDistricts <- st_read(
+      "../shape-files/ny-new-shape/CON24_shapefile_Feb_28_2024/con24.shp"
+    )
+
+    ## Reading layer `con24' from data source 
+    ##   `C:\development\r\DAT4500-project\fletcher\shape-files\ny-new-shape\CON24_shapefile_Feb_28_2024\con24.shp' 
+    ##   using driver `ESRI Shapefile'
+    ## Simple feature collection with 26 features and 2 fields
+    ## Geometry type: MULTIPOLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 105571.2 ymin: 4480943 xmax: 770761.9 ymax: 4985476
+    ## Projected CRS: NAD83 / UTM zone 18N
+
+    dist10 <- nyNewDistricts |>
+      filter(DISTRICT == 10) |>
+      select(OBJECTID, DISTRICT, geometry)
+    dist11 <- nyNewDistricts |>
+      filter(DISTRICT == 11) |>
+      select(OBJECTID, DISTRICT, geometry)
+
+    PlotVoteShare(distTenOptions[1,], distElevenOptions[1,])
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-5-1.png)
+
+    PlotMinority(distTenOptions[1,], distElevenOptions[1,])
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-5-2.png)
+
+    PlotVoteShare(dist10, dist11)
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-5-3.png)
+
+    PlotMinority(dist10, dist11)
+
+![](custom-redist-test_files/figure-markdown_strict/unnamed-chunk-5-4.png)
+
+### Section 7: Saving Mainland + Statin Island Redistricting
+
+    distTenOptions <- distTenOptions |>
+      mutate(DISTRICT = 10) |>
+      mutate(OBJECTID = 10)
+
+    distElevenOptions <- distElevenOptions |>
+      mutate(DISTRICT = 11) |>
+      mutate(OBJECTID = 11)
+
+
+    dist11_union <- st_union(
+      st_transform(distElevenOptions[1,], st_crs(distElevenMod)),
+      distElevenMod
+    )
+    dist11_union <- st_sf(geometry = dist11_union) |>
+      mutate(DISTRICT = 11) |>
+      mutate(OBJECTID = 11) |>
+      select(geometry, DISTRICT, OBJECTID)
+    ggplot() +
+      geom_sf(data = dist11_union)
+
+    mergedDistricts <- rbind(
+      st_transform(distTenOptions[1,], crs = st_crs(distElevenMod)),
+      dist11_union
+    )
+
+    st_write(mergedDistricts, "./shp/custom-bounds.shp")
