@@ -24,8 +24,9 @@ map_NY <- map_NY |>
 
 map_NY2 <- redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_NY$adj)
 
-NY_plans <- readRDS("C:/Users/Ryand/OneDrive/school/data society/NY_Legal.rds")
+NY_plans <- readRDS("C:/Users/Ryan dinham/OneDrive/school/data society/NY_Legal.rds")
 ```
+
 
 
 
@@ -194,7 +195,7 @@ redist.plot.plans(redblue,
 ```{r}
 #NY_plans7    <- saved$plans
 #map_NY27     <- saved$map
-district_sf7 <- saved
+#district_sf7 <- saved
 #best7        <- saved$best
 
 
@@ -251,3 +252,14 @@ dem_counts |>
     sd     = sd(n_dem_districts)
   )
 ```
+
+
+
+
+
+```{r}
+plot(NY_plans, dem_vote, size=0.5, color_thresh=0.5) +
+    scale_color_manual(values=c("black", "tomato2", "dodgerblue")) +
+    labs(title="Democratic vote share by district")
+```
+

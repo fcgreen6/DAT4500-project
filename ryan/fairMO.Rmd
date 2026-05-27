@@ -26,6 +26,7 @@ map_MO <- map_MO |>
 map_MO2 <- redist_map(map_MO, existing_plan = cd_2020, pop_tol = 0.01, total_pop = pop, adj = map_MO$adj)
 
 MO_plans <- readRDS("C:/Users/ryan dinham/OneDrive/school/data society/MO_plans2.rds")
+
 ```
 
 
@@ -229,11 +230,11 @@ glimpse(map_MO)
 
 ```{r}
 #histogram of dem leaning district counts
-dem_counts|>
+rep_counts |>
   ggplot(aes(x = n_rep_districts)) +
   geom_histogram()
 
-dem_counts |>
+rep_counts |>
   summarise(
     min    = min(n_rep_districts),
     q1     = quantile(n_rep_districts, 0.25),
@@ -244,6 +245,12 @@ dem_counts |>
     iqr    = IQR(n_rep_districts),
     stdev     = sd(n_rep_districts)
   )
+
+
+print(sum(map_MO$ndv) / sum(map_MO$vote_tot))
+
+
+
 ```
 
 
@@ -264,6 +271,7 @@ plot(MO_plans, dem_vote, size=0.5, color_thresh=0.5) +
 
 
 ```{r}
+
 MO_plans = match_numbers(MO_plans, map_MO2$cd_2020)
 
 MO_plans <- MO_plans |> 
