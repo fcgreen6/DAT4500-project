@@ -1,5 +1,5 @@
 ---
-title: "Lab Name"
+title: "Beginning_Report"
 author: "Author Name"
 date: "`r Sys.Date()`"
 output: openintro::lab_report
@@ -8,17 +8,142 @@ output: openintro::lab_report
 ```{r load-packages, message=FALSE}
 library(tidyverse)
 library(openintro)
+library(alarmdata)
+library(sf)
+library(ggplot2)
 ```
 
-### Exercise 1
+### Introduction
 
-Insert any text here.
+  Every ten years, the boundaries of congressional districts in the United States are redrawn following the national census. Known as congressional redistricting, it creates the potential to reshape political representation for millions of voters across the states. These district boundaries are crucial in influencing electoral outcomes which has made congressional redistricting one of the most politically significant and controversial aspects in American democracy. For some context, a congressional district is a specific geographic area within a U.S state that elects exactly one member to the United States House of Representatives. Because there are 435 seats in the House of Representatives, there are 435 districts spread throughout the United States. 
+  
+  There are a few rules which dictate how these 435 congressional districts are spread to each state. The first being what was briefly stated in the beginning, which is that following the decennial census which is every 10 years, states must redraw congressional district boundaries to reflect population changes. This leads into the next rule which requires all congressional districts to be roughly equal in population size. The rules for district populations vary depending on whether your comparing districts in the same state vs different states. Within the same state, districts must have nearly identical populations as the "one person, one vote" standard requires states to draw districts that prevents them from having unbalanced districts. But across different states it's a little different as the 435 seats are divided among the states based on their overall population. 
+  
+  In addition to that, there are also compactness and contiguous laws, but they aren't federal law for all states. Compactness meaning that a district should feature a regular consolidated shape with smooth boundaries rather than being elongated or sprawling. Contiguity means that all areas within a district are to be physically connected to one another. Different state legislatures are allowed a significant amount of freedom to conduct their redistricting process which has created many unique problems. More specifically the idea of gerrymandering. Gerrymandering refers to the practice of drawing electoral district boundaries in a way that clearly advantages a particular political party. You will understand more about gerrymandering when we can into the context of our two states. 
 
+  
+### Missouri and New York context
+
+  Missouri and New York are two very different states. On one hand, New York is a pretty democratic heavy state, which a large population which has a total of 26 districts. But it's important to note that New York's districts have been dwindling down as even after this 2020 census, they lost their 27th district. While Missouri is known as more of a republican state with only 8 congressional districts.
+  
+  New York has a dense urban concentration in its state, specifically with the dominant New York City. New York City itself consists of 13 congressional district which takes up most of the southern part of the state. Upstate New York is a lot different than its New York City counterpart. Upstate New York still has many heavily clustered voters in cities like Buffalo, Rochester, Albany, and Syracuse. But most of these cities are confined to one district while districts around these cities are majority rural land. This creates a major population balance between urban and rural areas. Almost all of the democratic votes for New York come from these urban cities while the rural areas mainly consist of republicans besides a few minor exceptions like Staten Island and parts on Long Island in NYC. New York remains a democratic powerhouse and has a documented history of drawing electoral districts to maximize democratic seats, especially after the 2020 census. the New York State Legislature, controlled by democrats, bypassed the bipartisan redistricting commission to pass their own aggressively gerrymandered map.   
+
+  
 ```{r code-chunk-label}
-# Insert code for Exercise 1 here
+ny_alarm<- alarm_50state_map("NY") 
+
+ny_district_outlines <- ny_alarm |>
+  group_by(cd_2020) |>
+  summarize(geometry = st_union(geometry))
+
+ggplot() +
+  geom_sf(data = ny_alarm, aes(fill = adv_20 / (adv_20 + arv_20)), color = "NA")  +
+  
+  geom_sf(data = ny_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  scale_fill_gradientn(
+    colors = c("#E91D0E", "#FFB6B6", "#B0C4DE", "#0015BC"),
+    values = c(0, 0.499, 0.501, 1),
+    name = "Partisan Lean"
+  ) +
+  theme_void() +
+  labs(title = "NY District Partisan lean 2020 Map")
+ 
+
 ```
 
-### Exercise 2
+```{r}
+ny_cd <- ny_alarm |>
+  group_by(cd_2020) |>
+  summarize(
+    dem_votes = sum(adv_20, na.rm = TRUE),
+    rep_votes = sum(arv_20, na.rm = TRUE)
+  ) |>
+  mutate(
+    dem_share = dem_votes / (dem_votes + rep_votes)
+  )
+
+ggplot(ny_cd) +
+  geom_sf(aes(fill = dem_share),
+          color = "black",
+          linewidth = 0.3) +
+  scale_fill_gradient2(
+    midpoint = 0.5,
+    low = "red",
+    mid = "white",
+    high = "blue",
+    labels = scales::percent
+  ) +
+  labs(
+    title = "New York Congressional District Partisan Lean 2020 Map",
+    fill = "Democratic Vote Share"
+  ) +
+  theme_void()
+```
+
+For our analysis we specifically looked at New York district 11 which consists of Staten Island and parts of Brooklyn because of the current court case that is unfolding in this district. The initial ruling on January 21st of 2026 a New York State Supreme Court judge ruled that the NY-11 district lines were unconstitutional because it dilutes the voting power of Black and Latino residents under the state constitution. But as of March 2nd, the U.S Supreme Court has paused the lower court redraw order. We will be looking at how this district is diluting minority voting power while trying to create a fairer district 11 that passes state law. 
+
+```{r}
+# NY-11 district 
+```
+
+
+
+
+  So, going away from the urban complexities of New York state, Missouri is quite literally the opposite. Missouri consists of roughly 60% republicans and 40% democratic. Missouri only consists of really two major cities being Kansas City and St. Louis. Outside of those major cities only a few other small pockets of Missouri consist of urban areas. Rural land dominates most of Missouri which has created a heavily favored republican state legislature. The 2020 census saw a 6-2 republican majority with the 2 democrat districts being the concentrated packing of Kansas City and St. Louis. There has been no court orders to mid-decade redistrict in Missouri. Missouri Supreme Court ruled that lawmakers are allowed to redraw district maps outside of the standard decennial census cycle. This has allowed for the Missouri state legislature to push for a redraw of congressional district lines to try and gain a stronger 7-1 majority. This is seen as a highly aggressive gerrymandering plot. Especially because the new plans crack Missouri district 5 into multiple districts. District 5 consisted of the heavy democratic Kansas City voters and the idea was to split them up into the surrounding districts with heavy republican voters so dampen the the overall democratic vote. 
+```{r}
+mo_alarm <- alarm_50state_map("MO")
+
+mo_district_outlines <- mo_alarm |>
+  group_by(cd_2020) |>
+  summarize(geometry = st_union(geometry))
+
+ggplot() +
+  geom_sf(data = mo_alarm, aes(fill = adv_20 / (adv_20 + arv_20)), color = "NA")  +
+  
+  geom_sf(data = mo_district_outlines, fill = NA, color = "black", linewidth = 0.5) +
+  scale_fill_gradientn(
+    colors = c("#E91D0E", "#FFB6B6", "#B0C4DE", "#0015BC"),
+    values = c(0, 0.499, 0.501, 1),
+    name = "Partisan Lean"
+  ) +
+  theme_void() +
+  labs(title = "MO District Partisan lean 2020 Map")
+```
+
+```{r}
+mo_cd <- mo_alarm |>
+  group_by(cd_2020) |>
+  summarize(
+    dem_votes = sum(adv_20, na.rm = TRUE),
+    rep_votes = sum(arv_20, na.rm = TRUE)
+  ) |>
+  mutate(
+    dem_share = dem_votes / (dem_votes + rep_votes)
+  )
+
+ggplot(mo_cd) +
+  geom_sf(aes(fill = dem_share),
+          color = "white",
+          linewidth = 0.3) +
+  scale_fill_gradient2(
+    midpoint = 0.5,
+    low = "red",
+    mid = "white",
+    high = "blue",
+    labels = scales::percent
+  ) +
+  labs(
+    title = "Missouri Congressional District Partisan Lean 2020 Map",
+    fill = "Democratic Vote Share"
+  ) +
+  theme_void()
+```
+
+
+
+### Methods
+
+###
 
 ...
 
