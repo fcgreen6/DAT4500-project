@@ -1,0 +1,82 @@
+---
+title: "Final Report: NY & MO Redistricting"
+output: html_document
+---
+
+## Methods
+
+Variables used, population, ndv (democrat vote), nrv (republican vote), Created variables such as vote_tot for sum of votes from ndv and nrv. Created the variable dem_vote which used for democrat vote share. Along with the variable minority which was a combination of all minority in each precinct. 
+
+Methods: Plans were generated using the redist package, which used Sequential Monte Carlo (SMC) to create generated continuous and similar population districts. The plans were created:
+redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01)
+
+A population tolerance of 1% was used, meaning no district could deviate more than 1% from each other. cd_2020 is the existing plan we used for boundaries and comparison. SMC is algorithm that creates randomly generated maps, it basically brute forces map creation and can give you thousands of maps to work with. It gets better as it runs by looking at different ways it came to the answer. 
+
+After creating these plans we would then run data analysis and statistics on them. We first created a variable for compactness by using the redist package that gives each district a rating for compactness. The equation that it uses for compactness is polsby-popper. Compactness = 4pi * Area / Perimeter squared. Another measure of compactness used was reock, the score is compactness = District area / minimum bounding circle area. Minimum bounding circle area means the area of the smallest circle that would completely enclose it. 
+
+After that we created a scoring method to rank our districts. Our main criteria for scoring was using compactness since it has the least bias or conflicts when used. How we would score is for each compactness score we would do the average of all the compactness for each plan, giving it a weight by multiplying it by 0.8. Then finding the min of the district of each respective plan and giving it a weight by multiplying by 0.2. This allowed for taking averages of all districts while also accounting for outliers of non-compact districts. Then we would add them together to create a compactness score. After creating a score for each measure of compactness we weighted polsby popper with a weight of 0.6 since it is the most statistically used for compactness. Then gave a 0.3 weight to reock score, to have different measures of compactness to be more accurate. Our last measure into our score was 0.1 for average of population deviation to award plans more equal population size. This method we believe is the most “fair” and unbiased. 
+
+Created a variable called dem_district which would say whether a district after SMC was won by over 5% to be a “safe” democrat district. Using that we would then run statistics on dem_districts for all our plans. We would find the mean, median, and standard deviation. Using that we would filter our plans by only the mean and a standard deviation away to only allow for the most common types of plans to be used. With creating our gerrymandered plans we would filter by the max or min number of dem_districts based on what we were looking for. This allowed for us to have uncommon plans like 7 republican districts in Missouri. This is how we are came up with our final plans.
+
+This allowed for the creation of “fair” plans based on compactness and being very common. It also allowed for plans that are compact while also being uncommon, allowing for potential gerrymandering and potentially legal while being gerrymandered. 
+
+## Results
+
+For the creation of our custom redistricting we first created many thousands of plans using SMC. We created 100,000 for Missouri and 20,000 for New York. After the creation of these plans we ran statistical analysis on them, an example is how common some criteria is compared to others. Below is a histogram of all for plans for Missouri and the count of plans that had a total number of republican districts winning by 5% or more. 
+
+
+![](images\MO_hist.png)
+
+![](images\MO_stats.png)
+
+
+
+As you can see five republican districts are by far the most common when randomly redistricting when using SMC. Based on the statistics it is very uncommon for a plan to have 7 republican districts winning by 5%. Of our 100,000 plans only four plans had seven or more republican districts winning by 5%. This shows how uncommon the 2025 redistrict for Missouri was, that is a 0.004% chance of happening using our method of SMC. Below is a graph of each district for Missouri, each black dot is one of our generated plans, with the orange line being the 2020 plan. 
+
+![MO plans](images\MO_districtstats.png)
+
+
+For district one and five 2020 plans are near the max of democrat percent vote for all our generated plans, showing how very uncommon it is. You can tell they did packing for district 1 and 5 by packing all the democrats into each district. This also allows for the other districts to be on the lower end of the democrat percent vote due to all this. You could argue this plan was also gerrymandered due to how uncommon the plans are and how they benefit the republican party.
+
+
+After running statistical analysis on New York for our 20,000 plans using the same criteria except democrats winning by 5%. Below is our histogram for New York plans. 
+
+
+![NY Histogram](images\NY_hist.png)
+
+![](images\NY_stats.png)
+
+
+
+The most common count of democrat districts are 16, 17, and 18. The mean is 17.5 with a standard deviation of 1, we then filtered our data for only 16-18 democrat districts. New Yorks 2020 plan has 19 democrat districts winning by 5% which is not that uncommon but not common. Based on the data it is about a 12.1% chance to get 19 or more.
+
+### MAPS
+
+By filtering by the max number of republican districts and then choosing the most compact district with our ratings. We are given a map with 7 Republican districts all winning by 5% or more. The least strong republican district is winning by 5.08% with the strongest winning by 26.3%. The only democrat district is 74.4% democrat. It is given a average polsby popper score of 0.192 and the lowest of polsby popper 0.094. It has a reock score of 0.455 and min of 0.307. Below is our Gerrymandered plan, the next one below is the 2025 legal Missouri plan. 
+
+
+![MO Gerrymandered](images\MO_gerrymander.png){width=70% height=70%}
+
+![Color Scheme](images\colorscheme.png)
+
+
+
+![MO 2025](images\MO_2025.png){width=70% height=70%}
+
+
+Our redistrict plan for gerrymandering is extremely similar 2025 legal plan. Both plans have seven districts that are over 5% republican winning. Along with one district that is winning by over 15% democrat. Both of the southern districts are deep red winning by over 15%, while the northern districts are winning by 5%. Both plans take a similar approach to breaking up the previous district five from the 2020 legal plan. Both plans broke up district five Kansas city into three different districts. This term would be referred to as cracking, where you dilute the vote of a certain party by cracking them into different districts. Then both plans pack St. Louis district one into one district. Packing is when you pack all of one party into one district to make one district the party can win so other party wins the remaining districts. Based on this analysis there is a high likely 2025 plan was gerrymandered but due to being compact, contiguous, similar populations, and not breaking up communities it was able pass. 
+
+### Fair
+
+For creating the fair Missouri plan we first filtered by what is criteria is the most common. The most common trait was to have five republican district winning by 5%. After that our main critrea is compactness due to it having the least amount of bias and being one of the best statistical values for fairness. Our most “fair” plan had a polsby popper score of 0.240 with a min of 0.176. Then for reock it was given a 0.480 for compactness, and a min of 0.389. For population deviation it was given a 0.607. This had one of the highest compactness scores of our plans and also the best population deviation score. This gave us a total score of 0.977 after our weighting. 
+
+
+![MO fair plan](images/MO_fair.png){width=70% height=70%}
+
+
+![Color Scheme](images\colorscheme.png)
+
+
+\n
+
+Our plan gives us both a district for Kansas City as well for St. Louis. This is due to with the cities they are rewarded for making districts there to be more compact. What helps make this map fair is it helps account for local fairness while also helping with global fairness. It gives the cities which are big enough to have their own districts their own districts while also allowing for rural areas to have their own districts. Roughly 40% of Missouri is democrat creating a 2/7 (28.5%) districts democrat being around 30% along with another district potential swinging democrat. 3/7 districts is roughly 42% which would be over representative, so this is a good match for being locally fair and globally fair while also reducing bias due to only redistricting based on most common plans and compactness. 
