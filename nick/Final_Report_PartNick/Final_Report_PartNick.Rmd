@@ -5,12 +5,14 @@ date: "`r Sys.Date()`"
 output: openintro::lab_report
 ---
 
-```{r load-packages, message=FALSE}
+```{r load-packages, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(openintro)
 library(alarmdata)
 library(sf)
 library(ggplot2)
+library(redist)
+library(dplyr)
 ```
 
 ### Introduction
@@ -80,16 +82,46 @@ ggplot(ny_cd) +
   theme_void()
 ```
 
-For our analysis we specifically looked at New York district 11 which consists of Staten Island and parts of Brooklyn because of the current court case that is unfolding in this district. The initial ruling on January 21st of 2026 a New York State Supreme Court judge ruled that the NY-11 district lines were unconstitutional because it dilutes the voting power of Black and Latino residents under the state constitution. But as of March 2nd, the U.S Supreme Court has paused the lower court redraw order. We will be looking at how this district is diluting minority voting power while trying to create a fairer district 11 that passes state law. 
+  For our analysis we specifically looked at New York district 11 which consists of Staten Island and parts of Brooklyn because of the current court case that is unfolding in this district. The initial ruling on January 21st of 2026 a New York State Supreme Court judge ruled that the NY-11 district lines were unconstitutional because it dilutes the voting power of Black and Latino residents under the state constitution. But as of March 2nd, the U.S Supreme Court has paused the lower court redraw order. We will be looking at how this district is diluting minority voting power while trying to create a fairer district 11 that passes state law. 
 
 ```{r}
-# NY-11 district 
+ny_11 <- ny_alarm |>
+  filter(cd_2020 == 11) |>
+  mutate(
+    minority_pct = (vap-vap_white) / (vap) * 100
+  )
+
+ny11_outline <- ny_alarm |>
+  filter(cd_2020 == 11) |>
+  summarize()
+  
+ggplot() +
+  geom_sf(
+    data = ny_11,
+    aes(fill = minority_pct),
+    color = "white",
+    linewidth = 0.03
+  ) +
+  geom_sf(
+    data = ny11_outline,
+    fill = NA,
+    color = "black",
+    linewidth = 0.8
+  ) +
+scale_fill_viridis_c(
+  name = "% Minority",
+  labels = scales::label_percent(scale = 1)
+)+
+  labs(
+    title = "Minority Voting Age Population in NY-11",
+  ) +
+  theme_void()
 ```
 
 
 
 
-  So, going away from the urban complexities of New York state, Missouri is quite literally the opposite. Missouri consists of roughly 60% republicans and 40% democratic. Missouri only consists of really two major cities being Kansas City and St. Louis. Outside of those major cities only a few other small pockets of Missouri consist of urban areas. Rural land dominates most of Missouri which has created a heavily favored republican state legislature. The 2020 census saw a 6-2 republican majority with the 2 democrat districts being the concentrated packing of Kansas City and St. Louis. There has been no court orders to mid-decade redistrict in Missouri. Missouri Supreme Court ruled that lawmakers are allowed to redraw district maps outside of the standard decennial census cycle. This has allowed for the Missouri state legislature to push for a redraw of congressional district lines to try and gain a stronger 7-1 majority. This is seen as a highly aggressive gerrymandering plot. Especially because the new plans crack Missouri district 5 into multiple districts. District 5 consisted of the heavy democratic Kansas City voters and the idea was to split them up into the surrounding districts with heavy republican voters so dampen the the overall democratic vote. 
+  So, going away from the urban complexities of New York state, Missouri is quite literally the opposite. Missouri consists of roughly 60% republicans and 40% democratic. Missouri only consists of really two major cities being Kansas City and St. Louis. Outside of those major cities only a few other small pockets of Missouri consist of urban areas. Rural land dominates most of Missouri which has created a heavily favored republican state legislature. The 2020 census saw a 6-2 republican majority with the 2 democrat districts being the concentrated packing of Kansas City and St. Louis. There has been no court orders to mid-decade redistrict in Missouri. Missouri Supreme Court ruled that lawmakers are allowed to redraw district maps outside of the standard decennial census cycle. This has allowed for the Missouri state legislature to push for a redraw of congressional district lines to try and gain a stronger 7-1 majority. This is seen as a highly aggressive gerrymandering plot. Especially because the new plans crack Missouri district 5 into multiple districts. District 5 consisted of the heavy democratic Kansas City voters and the idea was to split them up into the surrounding districts with heavy republican voters to dampen the the overall democratic vote. 
 ```{r}
 mo_alarm <- alarm_50state_map("MO")
 
@@ -139,9 +171,30 @@ ggplot(mo_cd) +
   theme_void()
 ```
 
+### MO New Map Plans
 
+  Here is the new proposed Missouri congressional districts map. What you will notice about this map is that the St. Louis and 2 southern districts mostly remain the same. But old Missouri District 5, which makes of almost entirely Kansas City, has been completely split apart into multiple districts. This is a gerrymandering tactic called cracking as the republican are trying to split up the democratic votes in old district 5 into multiple districts so the democratic votes are diluted.
 
-### Methods
+```{r}
+mo_new_cd <- st_read("HB1_Missouri_Congressional_Districts_2025")
+
+ggplot(mo_new_cd) +
+  geom_sf(aes(fill = factor(District)),
+          color = "white",
+          linewidth = 0.3) +
+  guides(fill = "none") +
+  theme_void() +
+  labs(
+    title = "Missouri Proposed Congressional Plan"
+  )
+```
+
+### Goals for our Research 
+  
+  Just the context behind these two states redistricting troubles show the complexities of congressional redistricting. This project aims to explore the mathematical and political sides to redistricting by analyzing two geographically and politically distinct states: New York and Missouri. To evaluate the integrity and structure of our map plans, we use two main metrics. The Polsby_Popper score and the Reock degree of compactness. Explanation about how these metrics work will be described farther down in this report. But with these metrics, this project aims to execute three distinct mapping objectives: the creation of a fair New York & Missouri map, maximization of partisan advantage maps for New York & Missouri, and Optimization of minority voting power in New York district 11. Creating a fair map for both states will be highly compact and contiguous while also prioritizing partisan fairness. maximizing partisan advantage maps will be the opposite of our fair maps. We will intentionally construct biased maps for both states to demonstrate how easily boundaries can be bent and turned to favor a specific political party. New York will be gerrymandered in favor of democrats while Missouri will be in favor of republicans. Lastly we decided to take extra time in specifically looking at the New York district 11 and its surrounding districts. Because of the active court case we felt the need to separately analyze this area from the rest of New York. Our goal for NY-11 is to reshape the district to heavily support minority voting power. So, we are basically gerrymandering to support minorities. 
+
+### DATA USED API census key 
+
 
 ###
 
