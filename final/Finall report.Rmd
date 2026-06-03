@@ -79,4 +79,13 @@ For creating the fair Missouri plan we first filtered by what is criteria is the
 
 \n
 
-Our plan gives us both a district for Kansas City as well for St. Louis. This is due to with the cities they are rewarded for making districts there to be more compact. What helps make this map fair is it helps account for local fairness while also helping with global fairness. It gives the cities which are big enough to have their own districts their own districts while also allowing for rural areas to have their own districts. Roughly 40% of Missouri is democrat creating a 2/7 (28.5%) districts democrat being around 30% along with another district potential swinging democrat. 3/7 districts is roughly 42% which would be over representative, so this is a good match for being locally fair and globally fair while also reducing bias due to only redistricting based on most common plans and compactness. 
+Our plan gives us both a district for Kansas City as well for St. Louis. This is due to with the cities they are rewarded for making districts there to be more compact. What helps make this map fair is it helps account for local fairness while also helping with global fairness. It gives the cities which are big enough to have their own districts their own districts while also allowing for rural areas to have their own districts. Roughly 40% of Missouri is democrat creating a 2/7 (28.5%) districts democrat being around 30% along with another district potential swinging democrat. 3/7 districts is roughly 42% which would be over representative, so this is a good match for being locally fair and globally fair while also reducing bias due to only redistricting based on most common plans and compactness.
+
+### Data Sources
+The Alarm Project provides precinct level demographic and election data aggregated from two different sources.
+
+First, the US Census Bureau’s decennial census aims to accurately provide block level population data necessary for ensuring congressional districts represent equal portions of the population. The most recent census process utilized an online self-response survey with in-person follow up attempts for non-respondents. Given the scale of the project, it is impossible for the US Census Bureau to accurately count every US citizen, but it is the best approximation that exists.
+
+Second, the Voting and Election Science Team (VEST) provides precinct level election data. VEST attempts to aggregate precinct level data by contacting officials directly for election records. VEST also claims to modify received precincts if they verify errors. As VEST aims to aggregate data representative of the US population, due to scale, the data is likely not complete.
+
+The Alarm Project has merged the discussed decennial census data and VEST election data at the precinct level, with the process available at: https://github.com/alarm-redist/census-2020. 
