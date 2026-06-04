@@ -181,8 +181,10 @@ ggplot(mo_cd) +
 
   Here is the new proposed Missouri congressional districts map. What you will notice about this map is that the St. Louis and 2 southern districts mostly remain the same. But old Missouri District 5, which makes of almost entirely Kansas City, has been completely split apart into multiple districts. This is a gerrymandering tactic called cracking as the republican are trying to split up the democratic votes in old district 5 into multiple districts so the democratic votes are diluted.
 
-```{r echo=FALSE}
-mo_new_cd <- st_read("HB1_Missouri_Congressional_Districts_2025")
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+mo_new_cd <- suppressMessages(
+  st_read("HB1_Missouri_Congressional_Districts_2025")
+)
 
 ggplot(mo_new_cd) +
   geom_sf(aes(fill = factor(District)),
