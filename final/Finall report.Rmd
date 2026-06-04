@@ -335,3 +335,13 @@ Our new maps for New York saw different effects compared to our Missouri fair an
 We had many goals for our project and areas we wanted to improve on. Sadly, we could not accomplish all our goals and improve in areas. We were limited by the amount of time we could set toward our goals. For example, we wanted to improve our fairness, when only going for compactness, you can end up with breaking up groups which is unfair. We wanted to create a way to keep groups intact, but we did not have enough time or resources to accomplish this goal. 
 
 Another limitation was the data we had was not perfect. For example, when redistricting New York was New York has many bodies of water. The precinct data would go over bodies of water or include bodies of water making it difficult to make New York accurately. This also created the issue of keeping your districts contiguous since it viewed the water as land when it was not. Redistricting district 10 and 11 became a challenge due to the large body of water between them and occasionally going over the water.
+
+## Sources:
+
+- Redistricting Data Hub Boundaries:
+  - Missouri 2020: <https://redistrictingdatahub.org/dataset/2022-missouri-congressional-districts-approved-plan/>
+  - Missouri Mid-Decade: <https://redistrictingdatahub.org/dataset/2025-missouri-congressional-districts-plan/>
+  - New York 2020: <https://redistrictingdatahub.org/dataset/2022-new-york-congressional-districts-plan/>
+  - New York Mid-Decade: <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
+- Alarm Project Data;
+  - VTD Downloads: <https://alarm-redist.org/posts/2021-08-10-census-2020/>  
