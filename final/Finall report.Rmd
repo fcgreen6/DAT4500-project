@@ -3,6 +3,10 @@ title: "Final Report: NY & MO Redistricting"
 output: html_document
 ---
 
+## Abstract
+
+Redistricting is the process of updating congressional district boundaries to account for changes in population distribution over time. Our team analyzed the process of redistricting by targeting two states, New York and Missouri. Interestingly, both of these states initiated the redistricting process mid-decade, either voluntarily or as a result of litigation, which is unusual. Our research began by identifying why each state enacted mid-decade redistricting and by learning how to recreate variations of their recent redistricting plans. After our initial research, our team defined the long-term goal of creating our own competitive (gerrymandered) and fair variations for each state. In addition, our team paid special attention to New York's District 11 during our gerrymandering process, as it is currently the subject of a redistricting dispute.
+During our redistricting experiments, we used the SMC algorithm from the Alarm Project extensively. To gerrymander Missouri, we aimed to strengthen the state’s existing Republican advantage, and found that our best effort closely mirrored the state’s current boundaries. To gerrymander New York, we aimed to improve minority voting power in District 11 and increase overall Democratic voting power in the rest of the state. To fairly redistrict both states, we mainly relied on the fairness measure of compactness and used a cross-referencing process to determine the most common distribution of Democratic and Republican districts produced by the SMC algorithm. Surprisingly, we found that New York’s official 2020 district plan outranked all of our generated attempts according to our standard of fairness.   
 ```{r}
 library(tidyverse)
 library(openintro)
