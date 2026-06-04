@@ -345,3 +345,5 @@ Another limitation was the data we had was not perfect. For example, when redist
   - New York Mid-Decade: <https://redistrictingdatahub.org/dataset/2024-new-york-congressional-districts-plan-approved/>
 - Alarm Project Data;
   - VTD Downloads: <https://alarm-redist.org/posts/2021-08-10-census-2020/>  
+- Reock compactness: <https://doi.org/10.2307/2109043>
+- Fairness: <https://arxiv.org/pdf/2210.11643>
