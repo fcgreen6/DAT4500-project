@@ -89,7 +89,10 @@ Our plan gives us both a district for Kansas City as well for St. Louis. This is
 
 By filtering by the max number of Democrat districts and then choosing the most compact district with our ratings. We are given a map with 21 Democrat districts winning by 5% or more. The least strong Democrat district is winning by 51% so it ends up being competive with a Democrat advantage.   The strongest winning by Democrat district by  43.2%. Our desired plan after using our compactness rating had a polsby popper score of 0.225, reock score of 0.413, and population deviation of 0.231, creating a total score of 0.831. Our most republican district was only winning by 4.4%, creating non safe republican districts with our gerrymander. 
 
-# put map of NY gerrymander
+![MO 2025](images\ny-gerymander.png){width=70% height=70%}
+![MO 2025](images\ny-gerymander-zoom.png){width=70% height=70%}
+
+
 
 ### Fair NY
 
