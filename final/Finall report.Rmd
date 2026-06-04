@@ -50,6 +50,8 @@ After running statistical analysis on New York for our 20,000 plans using the sa
 
 The most common count of democrat districts are 16, 17, and 18. The mean is 17.5 with a standard deviation of 1, we then filtered our data for only 16-18 democrat districts. New Yorks 2020 plan has 19 democrat districts winning by 5% which is not that uncommon but not common. Based on the data it is about a 12.1% chance to get 19 or more.
 
+For creating the map for gerrymandering New York we first dropped districts 10 and 11 from our plans, this was due to creating district 10 and 11 separately. We took the same approach for creating the fair MO plans besides we dropped some districts. We then filtered by which one of our plans had the max number of Democrat districts won by 5% or more. The max number of democratic districts we had out of 20,000 was 20 out of the 24 since district 10 and 11 was removed from the data. We then created district 10 and 11 by
+
 ### MAPS
 
 By filtering by the max number of republican districts and then choosing the most compact district with our ratings. We are given a map with 7 Republican districts all winning by 5% or more. The least strong republican district is winning by 5.08% with the strongest winning by 26.3%. The only democrat district is 74.4% democrat. It is given a average polsby popper score of 0.192 and the lowest of polsby popper 0.094. It has a reock score of 0.455 and min of 0.307. Below is our Gerrymandered plan, the next one below is the 2025 legal Missouri plan. 
@@ -66,9 +68,11 @@ By filtering by the max number of republican districts and then choosing the mos
 
 Our redistrict plan for gerrymandering is extremely similar 2025 legal plan. Both plans have seven districts that are over 5% republican winning. Along with one district that is winning by over 15% democrat. Both of the southern districts are deep red winning by over 15%, while the northern districts are winning by 5%. Both plans take a similar approach to breaking up the previous district five from the 2020 legal plan. Both plans broke up district five Kansas city into three different districts. This term would be referred to as cracking, where you dilute the vote of a certain party by cracking them into different districts. Then both plans pack St. Louis district one into one district. Packing is when you pack all of one party into one district to make one district the party can win so other party wins the remaining districts. Based on this analysis there is a high likely 2025 plan was gerrymandered but due to being compact, contiguous, similar populations, and not breaking up communities it was able pass. 
 
-### Fair
+### Fair MO
 
 For creating the fair Missouri plan we first filtered by what is criteria is the most common. The most common trait was to have five republican district winning by 5%. After that our main critrea is compactness due to it having the least amount of bias and being one of the best statistical values for fairness. Our most “fair” plan had a polsby popper score of 0.240 with a min of 0.176. Then for reock it was given a 0.480 for compactness, and a min of 0.389. For population deviation it was given a 0.607. This had one of the highest compactness scores of our plans and also the best population deviation score. This gave us a total score of 0.977 after our weighting. 
+
+For creating the fair New York plan we first dropped districts 10 and 11 from our plans, this was due to creating district 10 and 11 separately. We took the same approach for creating the fair MO plans besides we dropped some districts. We filtered out by what we decided was normal and most common. Then was graded with our weighting scale of compactness and small weight for population deviation.
 
 
 ![MO fair plan](images/MO_fair.png){width=70% height=70%}
@@ -80,6 +84,24 @@ For creating the fair Missouri plan we first filtered by what is criteria is the
 \n
 
 Our plan gives us both a district for Kansas City as well for St. Louis. This is due to with the cities they are rewarded for making districts there to be more compact. What helps make this map fair is it helps account for local fairness while also helping with global fairness. It gives the cities which are big enough to have their own districts their own districts while also allowing for rural areas to have their own districts. Roughly 40% of Missouri is democrat creating a 2/7 (28.5%) districts democrat being around 30% along with another district potential swinging democrat. 3/7 districts is roughly 42% which would be over representative, so this is a good match for being locally fair and globally fair while also reducing bias due to only redistricting based on most common plans and compactness.
+
+### Gerrymander NY
+
+By filtering by the max number of Democrat districts and then choosing the most compact district with our ratings. We are given a map with 21 Democrat districts winning by 5% or more. The least strong Democrat district is winning by 51% so it ends up being competive with a Democrat advantage.   The strongest winning by Democrat district by  43.2%. Our desired plan after using our compactness rating had a polsby popper score of 0.225, reock score of 0.413, and population deviation of 0.231, creating a total score of 0.831. Our most republican district was only winning by 4.4%, creating non safe republican districts with our gerrymander. 
+
+# put map of NY gerrymander
+
+### Fair NY
+
+Our most fair plan based on our fair criteria was actually the 2020 legal plan which was an interesting find. Due to this we ended up choosing the next best plan which had a 0.237 poslby popper score, 0.442 score for reock and 0.063 population deviation. While 2020 plan had a 0.367 poslby popper score, 0.415 score for reock and 0.671 population deviation. This gave us a total score of 0.957 for 2020 legal and 0.876 for our plan after our weighting. After that we then recreated the district 10 and 11 plans.
+
+# <- put map of NY fair
+
+
+
+
+
+
 
 ### Limitations
 
