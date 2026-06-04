@@ -3,7 +3,12 @@ title: "Final Report: NY & MO Redistricting"
 output: html_document
 ---
 
-```{r}
+```{r echo=FALSE, setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
 library(tidyverse)
 library(openintro)
 library(alarmdata)
@@ -34,7 +39,7 @@ During our redistricting experiments, we used the SMC algorithm from the Alarm P
   New York has a dense urban concentration in its state, specifically with the dominant New York City. New York City itself consists of 13 congressional districts which takes up most of the southern part of the state. Upstate New York is a lot different than its New York City counterpart. Upstate New York still has many heavily clustered voters in cities like Buffalo, Rochester, Albany, and Syracuse. But most of these cities are confined to one district while districts around these cities are majority rural land. This creates a major population balance between urban and rural areas. Almost all of the democratic votes for New York come from these urban cities while the rural areas mainly consist of republicans besides a few minor exceptions like Staten Island and parts on Long Island in NYC. New York remains a democratic powerhouse and has a documented history of drawing electoral districts to maximize democratic seats, especially after the 2020 census. the New York State Legislature, controlled by democrats, bypassed the bipartisan redistricting commission to pass their own aggressively gerrymandered map.   
 
   
-```{r code-chunk-label}
+```{r code-chunk-label, echo=FALSE}
 ny_alarm<- alarm_50state_map("NY") 
 
 ny_district_outlines <- ny_alarm |>
@@ -56,7 +61,7 @@ ggplot() +
 
 ```
 
-```{r}
+```{r echo=FALSE}
 ny_cd <- ny_alarm |>
   group_by(cd_2020) |>
   summarize(
@@ -87,7 +92,7 @@ ggplot(ny_cd) +
 
   For our analysis we specifically looked at New York district 11 which consists of Staten Island and parts of Brooklyn.This is because of the current court case that is unfolding in this district. The initial ruling on January 21st of 2026 a New York State Supreme Court judge ruled that the NY-11 district lines were unconstitutional because it dilutes the voting power of Black and Latino residents under the state constitution. But as of March 2nd, the U.S Supreme Court has paused the lower court redraw order. We will be looking at how this district is diluting minority voting power while trying to create a minority favored district 11 that passes state law. 
   
-```{r}
+```{r echo=FALSE}
 ny_11 <- ny_alarm |>
   filter(cd_2020 == 11) |>
   mutate(
@@ -123,7 +128,7 @@ scale_fill_viridis_c(
 
   So, going away from the urban complexities of New York state, Missouri is quite literally the opposite. Missouri consists of roughly 60% republicans and 40% democratic. Missouri only consists of really two major cities being Kansas City and St. Louis. Outside of those major cities only a few other small pockets of Missouri consist of urban areas. Rural land dominates most of Missouri which has created a heavily favored republican state legislature. The 2020 census saw a 6-2 republican majority with the 2 democrat districts being the concentrated packing of Kansas City and St. Louis. There has been no court orders to mid-decade redistrict in Missouri. Missouri Supreme Court ruled that lawmakers are allowed to redraw district maps outside of the standard decennial census cycle. This has allowed for the Missouri state legislature to push for a redraw of congressional district lines to try and gain a stronger 7-1 majority. This is seen as a highly aggressive gerrymandering plot. Especially because the new plans crack Missouri district 5 into multiple districts. District 5 consisted of the heavy democratic Kansas City voters and the idea was to split them up into the surrounding districts with heavy republican voters to dampen the the overall democratic vote. 
   
-```{r}
+```{r echo=FALSE}
 mo_alarm <- alarm_50state_map("MO")
 
 mo_district_outlines <- mo_alarm |>
@@ -143,7 +148,7 @@ ggplot() +
   labs(title = "MO District Partisan lean 2020 Map")
 ```
 
-```{r}
+```{r echo=FALSE}
 mo_cd <- mo_alarm |>
   group_by(cd_2020) |>
   summarize(
@@ -176,7 +181,7 @@ ggplot(mo_cd) +
 
   Here is the new proposed Missouri congressional districts map. What you will notice about this map is that the St. Louis and 2 southern districts mostly remain the same. But old Missouri District 5, which makes of almost entirely Kansas City, has been completely split apart into multiple districts. This is a gerrymandering tactic called cracking as the republican are trying to split up the democratic votes in old district 5 into multiple districts so the democratic votes are diluted.
 
-```{r}
+```{r echo=FALSE}
 mo_new_cd <- st_read("HB1_Missouri_Congressional_Districts_2025")
 
 ggplot(mo_new_cd) +
