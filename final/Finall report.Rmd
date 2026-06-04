@@ -284,14 +284,16 @@ By filtering by the max number of Democrat districts and then choosing the most 
 
 ![NY Gerrymandered Plan](images/ny-gerymander.png){width=70% height=70%}
 
-![NY Gerrymandered Plan (Zoomed)](images/ny-gerymander-zoom.png){width=70% height=70%}
+![NY Gerrymandered Plan Zoomed](images/ny-gerymander-zoom.png){width=70% height=70%}
 
 
 ### Fair NY
 
 Our most fair plan based on our fair criteria was actually the 2020 legal plan which was an interesting find. Due to this we ended up choosing the next best plan which had a 0.237 poslby popper score, 0.442 score for reock and 0.063 population deviation. While 2020 plan had a 0.367 poslby popper score, 0.415 score for reock and 0.671 population deviation. This gave us a total score of 0.957 for 2020 legal and 0.876 for our plan after our weighting. After that we then recreated the district 10 and 11 plans.
 
-# <- put map of NY fair
+![NY Fair Plan](images/ny-fair.png){width=70% height=70%}
+
+![NY Fair Plan Zoomed](images/ny-fair-zoom.png){width=70% height=70%}
 
 
 
