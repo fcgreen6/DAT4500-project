@@ -21,7 +21,7 @@ library(dplyr)
 ## Abstract
 
 Redistricting is the process of updating congressional district boundaries to account for changes in population distribution over time. Our team analyzed the process of redistricting by targeting two states, New York and Missouri. Interestingly, both of these states initiated the redistricting process mid-decade, either voluntarily or as a result of litigation, which is unusual. Our research began by identifying why each state enacted mid-decade redistricting and by learning how to recreate variations of their recent redistricting plans. After our initial research, our team defined the long-term goal of creating our own competitive (gerrymandered) and fair variations for each state. In addition, our team paid special attention to New York's District 11 during our gerrymandering process, as it is currently the subject of a redistricting dispute.
-During our redistricting experiments, we used the SMC algorithm from the Alarm Project extensively. To gerrymander Missouri, we aimed to strengthen the state’s existing Republican advantage, and found that our best effort closely mirrored the state’s current boundaries. To gerrymander New York, we aimed to improve minority voting power in District 11 and increase overall Democratic voting power in the rest of the state. To fairly redistrict both states, we mainly relied on the fairness measure of compactness and used a cross-referencing process to determine the most common distribution of Democratic and Republican districts produced by the SMC algorithm. Surprisingly, we found that New York’s official 2020 district plan outranked all of our generated attempts according to our standard of fairness.   
+During our redistricting experiments, we used the SMC algorithm from the Alarm Project extensively. To gerrymander Missouri, we aimed to strengthen the state’s existing Republican advantage, and found that our best effort closely mirrored the state’s current boundaries. To gerrymander New York, we aimed to improve minority voting power in District eleven and increase overall Democratic voting power in the rest of the state. To fairly redistrict both states, we mainly relied on the fairness measure of compactness and used a cross-referencing process to determine the most common distribution of Democratic and Republican districts produced by the SMC algorithm. Surprisingly, we found that New York’s official 2020 district plan outranked all of our generated attempts according to our standard of fairness.   
 
 ### Introduction
 
@@ -204,9 +204,27 @@ ggplot(mo_new_cd) +
 
 ## Methods
 
+### Data Sources
+
+The Alarm Project provides precinct level demographic and election data aggregated from two different sources.
+
+First, the US Census Bureau’s decennial census aims to accurately provide block level population data necessary for ensuring congressional districts represent equal portions of the population. The most recent census process utilized an online self-response survey with in-person follow up attempts for non-respondents. Given the scale of the project, it is impossible for the US Census Bureau to accurately count every US citizen, but it is the best approximation that exists.
+
+Second, the Voting and Election Science Team (VEST) provides precinct level election data. VEST attempts to aggregate precinct level data by contacting officials directly for election records. VEST also claims to modify received precincts if they verify errors. As VEST aims to aggregate data representative of the US population, due to scale, the data is likely not complete.
+
+The Alarm Project has merged the discussed decennial census data and VEST election data at the precinct level, with the process available at: https://github.com/alarm-redist/census-2020. 
+
+### Data Combination
+
+For redistricting New York district eleven in particular, we combined precinct level data from the Alarm Project with boundaries from the Redistricting Data Hub. The Redistricting Data Hub provides past and current district boundaries but no other data. As a result, when working with boundaries from the Redistricting Data Hub, spacial joins were regularly used to relate data and position.
+
+### Variables Used
+
 Variables used, population, ndv (democrat vote), nrv (republican vote), Created variables such as vote_tot for sum of votes from ndv and nrv. Created the variable dem_vote which used for democrat vote share. Along with the variable minority which was a combination of all minority in each precinct. 
 
-Methods: Plans were generated using the redist package, which used Sequential Monte Carlo (SMC) to create generated continuous and similar population districts. The plans were created:
+### Process
+
+Plans were generated using the redist package, which used Sequential Monte Carlo (SMC) to create generated continuous and similar population districts. The plans were created:
 redist_map(map_NY, existing_plan = cd_2020, pop_tol = 0.01)
 
 A population tolerance of 1% was used, meaning no district could deviate more than 1% from each other. cd_2020 is the existing plan we used for boundaries and comparison. SMC is algorithm that creates randomly generated maps, it basically brute forces map creation and can give you thousands of maps to work with. It gets better as it runs by looking at different ways it came to the answer. 
@@ -286,8 +304,9 @@ Our plan gives us both a district for Kansas City as well for St. Louis. This is
 
 ### Gerrymander NY
 
-By filtering by the max number of Democrat districts and then choosing the most compact district with our ratings. We are given a map with 21 Democrat districts winning by 5% or more. The least strong Democrat district is winning by 51% so it ends up being competive with a Democrat advantage.   The strongest winning by Democrat district by  43.2%. Our desired plan after using our compactness rating had a polsby popper score of 0.225, reock score of 0.413, and population deviation of 0.231, creating a total score of 0.831. Our most republican district was only winning by 4.4%, creating non safe republican districts with our gerrymander. 
+By filtering by the max number of Democrat districts and then choosing the most compact district with our ratings. We are given a map with 21 Democrat districts winning by 5% or more. The least strong Democrat district is winning by 51% so it ends up being competive with a Democrat advantage.   The strongest winning by Democrat district by  43.2%. Our desired plan after using our compactness rating had a polsby popper score of 0.225, reock score of 0.413, and population deviation of 0.231, creating a total score of 0.831. Our most republican district was only winning by 4.4%, creating non safe republican districts with our gerrymander.
 
+In addition to gerymandering the entirety of New York, we were able increase minority voting power in district eleven specifically, attempting to reflect recent litigation. This was accomplished by dividing districts ten and eleven into Statin Island and mainland pieces, and then splitting the mainland into valid, equal sized parts that could potentilly be joined to district eleven. Then, the results were filtered for highest minority voting age population. For an interactive comparison, visit: https://fcgreen6.github.io/DAT4500-project-interactive/pages/district-11-interactive/main.html
 
 ![NY Gerrymandered Plan](images/ny-gerymander.png){width=70% height=70%}
 
@@ -313,13 +332,3 @@ Our most fair plan based on our fair criteria was actually the 2020 legal plan w
 We had many goals for our project and areas we wanted to improve on. Sadly, we could not accomplish all our goals and improve in areas. We were limited by the amount of time we could set toward our goals. For example, we wanted to improve our fairness, when only going for compactness, you can end up with breaking up groups which is unfair. We wanted to create a way to keep groups intact, but we did not have enough time or resources to accomplish this goal. 
 
 Another limitation was the data we had was not perfect. For example, when redistricting New York was New York has many bodies of water. The precinct data would go over bodies of water or include bodies of water making it difficult to make New York accurately. This also created the issue of keeping your districts contiguous since it viewed the water as land when it was not. Redistricting district 10 and 11 became a challenge due to the large body of water between them and occasionally going over the water.
-
-
-### Data Sources
-The Alarm Project provides precinct level demographic and election data aggregated from two different sources.
-
-First, the US Census Bureau’s decennial census aims to accurately provide block level population data necessary for ensuring congressional districts represent equal portions of the population. The most recent census process utilized an online self-response survey with in-person follow up attempts for non-respondents. Given the scale of the project, it is impossible for the US Census Bureau to accurately count every US citizen, but it is the best approximation that exists.
-
-Second, the Voting and Election Science Team (VEST) provides precinct level election data. VEST attempts to aggregate precinct level data by contacting officials directly for election records. VEST also claims to modify received precincts if they verify errors. As VEST aims to aggregate data representative of the US population, due to scale, the data is likely not complete.
-
-The Alarm Project has merged the discussed decennial census data and VEST election data at the precinct level, with the process available at: https://github.com/alarm-redist/census-2020. 
