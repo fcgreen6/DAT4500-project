@@ -347,3 +347,6 @@ Another limitation was the data we had was not perfect. For example, when redist
   - VTD Downloads: <https://alarm-redist.org/posts/2021-08-10-census-2020/>  
 - Reock compactness: <https://doi.org/10.2307/2109043>
 - Fairness: <https://arxiv.org/pdf/2210.11643>
+- NY-11 Context <https://abc7ny.com/post/new-york-district-11-seat-ruled-unconstitutional-judge-orders-state-redraw-congressional-map-february-6/18445081/>
+- Missouri Context <https://ballotpedia.org/Redistricting_in_Missouri_ahead_of_the_2026_elections>
+-Census Bureau <https://www.census.gov/data/developers.html>
